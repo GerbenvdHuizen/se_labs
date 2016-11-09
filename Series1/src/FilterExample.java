@@ -68,8 +68,9 @@ public class FilterExample
 		{	isRectangular = ( mat[row].length == COLUMNS );
 			row++;
 		}
-		
+		System.out.println("Test..."); /* This should not be filtered out. */
+		/* This should not be filtered out.*/ System.out.println("Test...");
+		/* This */ System.out.println("Test..."); /* neither. */
 		return isRectangular;
 	}
-	
 }
