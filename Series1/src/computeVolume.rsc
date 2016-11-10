@@ -1,8 +1,6 @@
 module computeVolume
 
 import IO;
-import List;
-import String;
 
 import util::FileSystem;
 

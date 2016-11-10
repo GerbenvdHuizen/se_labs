@@ -1,8 +1,6 @@
 module computeUnitSize
 
 import IO;
-import Map;
-import String;
 
 import lang::java::jdt::m3::Core;
 

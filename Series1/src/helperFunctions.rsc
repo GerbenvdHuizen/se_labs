@@ -1,7 +1,6 @@
 module helperFunctions
 
 import IO;
-import List;
 import String;
 
 import util::Math;

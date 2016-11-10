@@ -1,8 +1,6 @@
 module computeUnitComplexity
 
 import IO;
-import Map;
-import String;
 
 import lang::java::jdt::m3::Core;
 import lang::java::jdt::m3::AST;
@@ -14,7 +12,7 @@ public void computeUnitComplexityRank (loc projectSource) {
 	m3Model = createM3FromEclipseProject(projectSource);
 	methodLocations = methods(m3Model);
 	riskPercentages = computeUnitComplexity(m3Model, methodLocations);
-	println("Unit complexity rank: " + getUnitComplexityRank(riskPercentages));
+	println("Complexity per unit rank: " + getUnitComplexityRank(riskPercentages));
 }
 
 public map[str, num] computeUnitComplexity (M3 m3Model, set[loc] methodLocations) {
@@ -66,6 +64,7 @@ public str getMethodRiskEvaluation (int methodComplexity) {
 	}
 }
 
+// Ranking is based on the table in the paper "A Practical Model for Measuring Maintainability".
 public str getUnitComplexityRank (map[str, num] riskPercentages) {
 	percentageModerate = riskPercentages["moderate"];
 	percentageHigh = riskPercentages["high"];
