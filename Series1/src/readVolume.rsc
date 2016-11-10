@@ -5,27 +5,26 @@ import String;
 import List;
 import helperFunctions;
 
-public void countCodeLines (list[loc] project){
+public int computeVolume (set[loc] project){
 	n = 0;
 	for(s <- project){
 		file = readFileLines(s.top);
-		//println(removeCommentsAndWspace(clearTabBracket(file)));
 		int codeLines = size(removeCommentsAndWspace(file));
 		n += codeLines;
 	}
-	println(n);
-	str result;
+	//println(n);
+	int result;
 	if(n <= 66000) {
-		result = "++";
+		result = 5;
 	} else if(n > 66000 && n <= 246000) {
-		result = "+";
+		result = 4;
 	} else if(n > 246000 && n <= 665000) {
-		result = "o";
+		result = 3;
 	} else if(n > 665000 && n <= 1310000) {
-		result = "-";
+		result = 2;
 	} else if(n > 1310000) {
-		result = "--";
+		result = 1;
 	}
 	
-	println(result);
+	return result;
 }

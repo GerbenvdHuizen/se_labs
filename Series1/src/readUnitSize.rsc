@@ -20,13 +20,12 @@ list[int] unitSizePM(M3 model) {
 	return methodUnitSize;
 }
 
-public void testUnitSize(loc project){
+public int computeUnitSize(loc project){
 	
 	list[int] moderateRisk = [];
 	list[int] highRisk = [];
 	list[int] veryHighRisk = [];
 	M3 model = createM3FromEclipseProject(project);
-	println("hey");
 	
 	//list[Declaration] methodAsts = [ d | /Declaration d := createM3FromEclipseProject(s), d is java+method];
 	
@@ -46,30 +45,30 @@ public void testUnitSize(loc project){
 	if(veryHighRisk != [])
 		veryHighRiskPercentage = percent(sum(veryHighRisk) , sum(unitSizeAll));
 	
-	println(unitSizeAll);
+	//println(unitSizeAll);
 	println(moderateRiskPercentage);
 	println(highRiskPercentage);
 	println(veryHighRiskPercentage);
 	
-	str result;
+	int result;
 	if(moderateRiskPercentage <= 25 && 
 		highRiskPercentage < 1 && 
 		veryHighRiskPercentage < 1) {
-		result = "++";
+		result = 5;
 	} else if(moderateRiskPercentage <= 30 &&
 		highRiskPercentage <= 5 && 
 		veryHighRiskPercentage < 1) {
-		result = "+";
+		result = 4;
 	} else if(moderateRiskPercentage <= 40 &&
 		highRiskPercentage <= 10 && 
 		veryHighRiskPercentage < 1) {
-		result = "o";
+		result = 3;
 	} else if(moderateRiskPercentage <= 50 &&
 		highRiskPercentage <= 15 && 
 		veryHighRiskPercentage <= 5) {
-		result = "-";
+		result = 2;
 	} else 
-		result = "--";
+		result = 1;
 	
-	println(result);
+	return result;
 }

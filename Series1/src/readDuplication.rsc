@@ -32,7 +32,7 @@ public list[int] countDuplicates(list[str] file)
 	return numbOfDuplicates;
 }
 
-public void duplication(list[loc] project){
+public int computeDuplication(set[loc] project){
 	list[int] duplicates = [];
 	n = 0;
 	for(s <- project){
@@ -44,18 +44,18 @@ public void duplication(list[loc] project){
 	int percentage = percent(sum(duplicates),n);
 	
 	println(percentage);
-	str result;
+	int result;
 	if(percentage <= 3) {
-		result = "++";
+		result = 5;
 	} else if(percentage > 3 && percentage <= 5) {
-		result = "+";
+		result = 4;
 	} else if(percentage > 5 && percentage <= 10) {
-		result = "o";
+		result = 3;
 	} else if(percentage > 10 && percentage <= 20) {
-		result = "-";
+		result = 2;
 	} else if(percentage > 20) {
-		result = "--";
+		result = 1;
 	}
 	
-	println(result);
+	return result;
 }
