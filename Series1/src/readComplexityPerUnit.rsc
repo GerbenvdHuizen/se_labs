@@ -1,64 +1,23 @@
 module readComplexityPerUnit
 
 import lang::java::m3::AST;
+import lang::java::jdt::m3::Core;
 import IO;
 import String;
 import List;
-import Node;
-
-public list[str] readFile(loc file){
-	return readFileLines(file);
-}
-
-public int countMethods(list[str] file){
-  n = 0;
-  for(s <- file) {
-      switch(s){
-	  case /public/: n += 1;
-	  case /void/: n += 1;
-	  case /int\s[a-z,A-Z]*\(\)|int\s[a-z,A-Z]*\([A-Z,a-z]*/: n += 1;
-	  case /boolean\s[a-z,A-Z]*\(\)|boolean\s[a-z,A-Z]*\([A-Z,a-z]*/: n += 1;
-	  case /String\s[a-z,A-Z]*\(\)|String\s[a-z,A-Z]*\([A-Z,a-z]*/: n += 1;
-	  case /[A-Z,a-z]*\s[a-z]*\(\)\{|[A-Z,a-z]*\s[a-z]*\([A-Z,a-z]*\s[a-z]*\)\{|[A-Z,a-z]*\s[a-z,A-Z]*\([A-Z,a-z]*\s[a-z]*\)\s[a-z]*/: n += 1;
-	  }
-  }
-  return n;
-}
-
-public int countStatements(list[str] file){
-	n = 0;
-  	for(s <- file) {
-      	switch(s){
-		  case /if\(\w*(\)|\w*)(\s|[\,,\s,\.]*)/: n += 1;
-		  case /for\(/: n += 1;
-		  case /\swhile\(([\w]*\.[\w]*\(\)|true|\w*\(\)|\w*[\>,\=,\<]*)(\)\{|)/: n += 1;
-		  case /do\{/: n += 1;
-		}
-    }
-  	return n; 
-}
+import util::Math;
+import helperFunctions;
 
 
-public int countNodes (list[loc] project){
-	nodes = 0;
-	for(s <- project){
-		file = readFile(s.top);
-		println(file);
-		nodes += countMethods(file);
-		nodes += countStatements(file);
-	}
-	return nodes;	
-}
-
-
-lrel[loc, int, int] complexityPerUnit(list[Declaration]methodNodes) {
-	lrel[loc, int, int] methodCPU = []; 
-	 
-	for(methodNode <- methodNodes) {
+lrel[int, int] complexityPerUnit(M3 model) {
+	lrel[int, int] methodCPU = []; 
+	set[loc]methodLocs = methods(model);
+	
+	for(methodLoc <- methodLocs) {
 		int result = 1;
 		
 		//println(getAnnotations(methodNode));
-		
+		Declaration methodNode = getMethodASTEclipse(methodLoc, model = model);
 		visit(methodNode) {
 	  		case foreach(_,_,_) : result += 1;
 	  		case \for(_,_,_,_) : result += 1;
@@ -69,73 +28,68 @@ lrel[loc, int, int] complexityPerUnit(list[Declaration]methodNodes) {
 			case \while(_,_) : result += 1;
 			case \catch(_,_) : result += 1;			
 		}
-		println(result);
-		if(/method(m,_,_,_) := methodNode@typ) {
-			unitS = unitSize(m);
-			methodCPU += <m, result, unitS>;
-		}				
+		//println(result);
+		
+		unitS = unitSize(methodLoc);
+		methodCPU += <result, unitS>;
+		
 	}
 	
 	return methodCPU;
 }
 
-public bool checkComment(str line) {
-	str noWhiteSpace = trim(line);
-	if(startsWith(noWhiteSpace, "//") 
-		|| startsWith(noWhiteSpace, "/*") 
-		|| startsWith(noWhiteSpace, "*")
-		|| startsWith(noWhiteSpace, "*/"))
-		return true;
-	else
-		return false;
-}
-
-public bool checkEmpty(str line) {
-	str noWhiteSpace = trim(line);
-	if(/^[ \t\r\n]*$/ := noWhiteSpace)
-		return true;
-	else
-		return false;
-}
-
-int unitSize(loc methodLoc)	{
-	list[str] lines = clearTabBracket(readFileLines(methodLoc));
-	//println(removeCommentsAndWspace(lines));
-	return size(removeCommentsAndWspace(lines));
-}
-
-public list[str] removeCommentsAndWspace(list[str] file){
-	list[str] cleanLines = [];
-	for(int i <- [0..(size(file) - 1)]){
-    	if(!checkComment(file[i]) && !checkEmpty(file[i]) && /((\s|\/*)(\/\*|\s\*)|[^\w,\;]\s\/*\/)/ !:= file[i])
-        	cleanLines += file[i];         
-	} 
-	return cleanLines;
-}
-
-list[str] clearTabBracket(list[str] lines) {
-	list[str] clearedLines = [];
-	list[str] toClear = ["\t", "{", "}"];
-	str temp;
-	for(line <- lines) {
-		tmp = line;
-		for(char <- toClear ) {
-			temp = trim(replaceAll(tmp, char, ""));
-		}
-		if(temp == "{" || temp == "}")
-			temp = "";
-		clearedLines += temp;			
-	}
-	return clearedLines;
-}
-
 void testCPU(loc project){
-	list[Declaration] methodAsts = [ d | /Declaration d := createAstFromFile(project, true), d is method];
+	//list[Declaration] methodAsts = [ d | /Declaration d := createAstFromFile(project, true), d is method];
 	//Anode = createAstFromFile(project,true);
-	lrel[loc,int,int] methodCPU = complexityPerUnit(methodAsts);
+	list[int] totalCPU =[];
+	list[int] moderateRisk = [];
+	list[int] highRisk = [];
+	list[int] veryHighRisk = [];
+	M3 model = createM3FromEclipseProject(project);
+	
+	lrel[int,int] methodCPU = complexityPerUnit(model);
 	println(methodCPU);
-	lrel[loc,int,int] lowRisk = [<l,x,y> | <l,x,y> <- methodCPU, x <= 10];
-	lrel[loc,int,int] moderateRisk = [<l,x,y> | <l,x,y> <- methodCPU, x > 10, x <= 20];
-	lrel[loc,int,int] highRisk = [<l,x,y> | <l,x,y> <- methodCPU, x > 20, x <= 50];
-	lrel[loc,int,int] veryHighRisk = [<l,x,y> | <l,x,y> <- methodCPU, x > 50];
+	//lrel[int,int] lowRisk = [<x,y> | <x,y> <- methodCPU, x <= 10];
+	totalCPU += [y | <x,y> <- methodCPU];
+	moderateRisk = [y | <x,y> <- methodCPU, x > 10, x <= 20];
+	highRisk = [y | <x,y> <- methodCPU, x > 20, x <= 50];
+	veryHighRisk = [y | <x,y> <- methodCPU, x > 50];
+	
+	int moderateRiskPercentage = 0;
+	int highRiskPercentage = 0;
+	int veryHighRiskPercentage = 0;
+	if(moderateRisk != [])
+		moderateRiskPercentage = percent(sum(moderateRisk) , sum(totalCPU));
+	if(highRisk != [])
+		highRiskPercentage = percent(sum(highRisk) , sum(totalCPU));
+	if(veryHighRisk != [])
+		veryHighRiskPercentage = percent(sum(veryHighRisk) , sum(totalCPU));
+	
+	println(totalCPU);
+	println(moderateRiskPercentage);
+	println(highRiskPercentage);
+	println(veryHighRiskPercentage);
+	
+	str result;
+	if(moderateRiskPercentage <= 25 && 
+		highRiskPercentage < 1 && 
+		veryHighRiskPercentage < 1) {
+		result = "++";
+	} else if(moderateRiskPercentage <= 30 &&
+		highRiskPercentage <= 5 && 
+		veryHighRiskPercentage < 1) {
+		result = "+";
+	} else if(moderateRiskPercentage <= 40 &&
+		highRiskPercentage <= 10 && 
+		veryHighRiskPercentage < 1) {
+		result = "o";
+	} else if(moderateRiskPercentage <= 50 &&
+		highRiskPercentage <= 15 && 
+		veryHighRiskPercentage <= 5) {
+		result = "-";
+	} else 
+		result = "--";
+	
+	
+	println(result);
 }
