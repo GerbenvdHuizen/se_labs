@@ -11,20 +11,29 @@ public int countCodeLines (list[str] lines) {
 	for (line <- lines) {
 		trimmedLine = trim(line);
 		if (/^\/\/.*/ !:= trimmedLine
-			//!startsWith(trimmedLine, "//")
 			&& /^\/\*.*/ !:= trimmedLine
-			//&& !startsWith(trimmedLine, "/*")
 			&& /^\*.*/ !:= trimmedLine 
-			//&& !startsWith(trimmedLine, "*")
 			&& /^\*\// !:= trimmedLine
-			//&& !startsWith(trimmedLine, "*/")
 			&& trimmedLine != "") {
 			//&& /^\/\*.*\*\/$+/ !:= trimmedLine) {
 			codeLines += 1;
 		}
-		//else {
-		//	println("Filtered out: " + trimmedLine);
-		//}
+	}
+	return codeLines;
+}
+
+public list[str] returnCodeLines (list[str] lines) {
+	codeLines = [];
+	for (line <- lines) {
+		trimmedLine = trim(line);
+		if (/^\/\/.*/ !:= trimmedLine
+			&& /^\/\*.*/ !:= trimmedLine
+			&& /^\*.*/ !:= trimmedLine
+			&& /^\*\// !:= trimmedLine
+			&& trimmedLine != "") {
+			//&& /^\/\*.*\*\/$+/ !:= trimmedLine) {
+			codeLines += trimmedLine;
+		}
 	}
 	return codeLines;
 }
