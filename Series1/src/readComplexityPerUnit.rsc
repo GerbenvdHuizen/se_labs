@@ -42,14 +42,13 @@ lrel[int, int] complexityPerUnit(M3 model) {
 	return methodCPU;
 }
 
-public int computeCPU(loc project){
+public int computeCPU(M3 model){
 	//list[Declaration] methodAsts = [ d | /Declaration d := createAstFromFile(project, true), d is method];
 	//Anode = createAstFromFile(project,true);
 	list[int] totalCPU =[];
 	list[int] moderateRisk = [];
 	list[int] highRisk = [];
 	list[int] veryHighRisk = [];
-	M3 model = createM3FromEclipseProject(project);
 	
 	lrel[int,int] methodCPU = complexityPerUnit(model);
 	//println(methodCPU);
@@ -93,7 +92,6 @@ public int computeCPU(loc project){
 		result = 2;
 	} else 
 		result = 1;
-	
 	
 	return result;
 }

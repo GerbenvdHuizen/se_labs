@@ -42,6 +42,21 @@ public list[str] removeCommentsAndWspace(list[str] file){
 	return cleanLines;
 }
 
+public lrel[str,int,int] findFileLineIndices(set[loc] allFiles) {
+	lrel[str,int,int] allLines = [];
+	int fileIndex = 1;
+	for(f <- allFiles) {
+	 	int lineIndex = 1;
+	 	file = readFileLines(f.top);
+	 	for(l <- removeCommentsAndWspace(file)) {
+	 		allLines += <l,lineIndex,fileIndex>;
+	 		lineIndex +=1;
+	 	}
+	 	fileIndex +=1;
+	}
+	return allLines;
+}
+
 list[str] clearTabBracket(list[str] lines) {
 	list[str] clearedLines = [];
 	list[str] toClear = ["\t", "{", "}"];

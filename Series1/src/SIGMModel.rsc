@@ -3,22 +3,30 @@ module SIGMModel
 
 import util::FileSystem;
 import IO;
+import List;
+import lang::java::jdt::m3::Core;
+import util::Math;
+import helperFunctions;
 import readVolume;
 import readUnitSize;
 import readComplexityPerUnit;
 import readDuplication;
 
-public list[int] getAverageRating(loc project) {
-
-	int volume = computeVolume(visibleFiles(project));
-	int unitSize = computeUnitSize(project);
-	int cpu = computeCPU(project);
-	int duplication = computeDuplication(visibleFiles(project));
+public void getAverageRating(loc project) {
+	
+	lrel[str,int,int] allFiles = findFileLineIndices(visibleFiles(project));
+	M3 model = createM3FromEclipseProject(project);
+	
+	int volume = computeVolume(size(allFiles));
+	int cpu = computeCPU(model);
+	int unitSize = computeUnitSize(model);
+	int duplication = computeDuplication(allFiles,size(allFiles));
+	
 	int totalRating = volume + unitSize + cpu + duplication; 
 						
 	int averageRating = totalRating/4;
 	
-	return [averageRating, volume, unitSize, cpu, duplication]; 
+	createTable([averageRating, volume, unitSize, cpu, duplication]); 
 }
 
 str getSTR(int n) {
@@ -38,28 +46,28 @@ str getSTR(int n) {
 }
 
 void createTable(list[int] metrics) {
-int analAbi = (metrics[1] + metrics[2] + metrics[4])/3;
-int changeAbi = (metrics[3] + metrics[4])/2;
-int testAbi = (metrics[2] + metrics[3])/2;
+int analAbi = round((metrics[1] + metrics[2] + metrics[4])/3.0);
+int changeAbi = round((metrics[3] + metrics[4])/2.0);
+int testAbi = round((metrics[2] + metrics[3])/2.0);
+int maintAbi = round((analAbi + changeAbi + testAbi)/3.0);
 
-println("Volume = 1");
-println("Complexity per unit = 2");
-println("Duplication = 3");
-println("Unit size = 4");
-println("Unit testing = 5");
+println("Volume : <getSTR(metrics[1])>");
+println("Complexity per unit : <getSTR(metrics[3])>");
+println("Duplication : <getSTR(metrics[4])>");
+println("Unit size : <getSTR(metrics[2])>");
 println("");
-println("                ------------------------------");
-println("                | 1 | 2 | 3 | 4 | 5 | Result |");	
-println("----------------------------------------------");	
-println("| Analysability | x |   | x | x | x |   <getSTR(analAbi)>    | ");
-println("----------------------------------------------");
-println("| Changeability |   | x | x |   |   |   <getSTR(changeAbi)>    | ");
-println("----------------------------------------------");
-println("| Stability     |   |   |   |   | x |   o    | ");
-println("----------------------------------------------");
-println("| Testability   |   | x |   | x | x |   <getSTR(testAbi)>    | ");
-println("----------------------------------------------");
+println("                -------------------------------------------------------------");
+println("                | Volume | Complexity PU | Duplication | Unit Size | Result ");	
+println("-----------------------------------------------------------------------------");	
+println("| Analysability |   x    |               |      x      |     x     |   <getSTR(analAbi)>");
+println("-----------------------------------------------------------------------------");
+println("| Changeability |        |       x       |      x      |           |   <getSTR(changeAbi)>");
+println("-----------------------------------------------------------------------------");
+println("| Stability     |        |               |             |           |   ");
+println("-----------------------------------------------------------------------------");
+println("| Testability   |        |       x       |             |     x     |   <getSTR(testAbi)>");
+println("-----------------------------------------------------------------------------");
 println("");
-println("Maintainability : <getSTR(metrics[0])>");
+println("Maintainability : <getSTR(maintAbi)>");
 
 }

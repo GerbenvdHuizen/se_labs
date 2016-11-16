@@ -20,20 +20,20 @@ list[int] unitSizePM(M3 model) {
 	return methodUnitSize;
 }
 
-public int computeUnitSize(loc project){
+public int computeUnitSize(M3 model){
 	
 	list[int] moderateRisk = [];
 	list[int] highRisk = [];
 	list[int] veryHighRisk = [];
-	M3 model = createM3FromEclipseProject(project);
+	//M3 model = createM3FromEclipseProject(project);
 	
 	//list[Declaration] methodAsts = [ d | /Declaration d := createM3FromEclipseProject(s), d is java+method];
 	
 	list[int] unitSizeAll = unitSizePM(model);
 	//lowRisk += [<l,x> | <l,x> <- unitSizeAll, x <= 20];
-	moderateRisk += [x | x <- unitSizeAll, x > 20, x <= 50];
-	highRisk += [x | x <- unitSizeAll, x > 50, x <= 100];
-	veryHighRisk += [x | x <- unitSizeAll, x > 100];
+	moderateRisk += [x | x <- unitSizeAll, x > 30, x <= 44];
+	highRisk += [x | x <- unitSizeAll, x > 44, x <= 74];
+	veryHighRisk += [x | x <- unitSizeAll, x > 74];
 	
 	int moderateRiskPercentage = 0;
 	int highRiskPercentage = 0;

@@ -2,46 +2,53 @@ module readDuplication
 
 import IO;
 import List;
+import Set;
 import String;
 import util::Math;
 import helperFunctions;
 
-public list[int] countDuplicates(list[str] file)
-{
-	list[str] cleanStrings = removeCommentsAndWspace(clearTabBracket(file));
-	//println(clearTabBracket(cleanStrings));
-	list[str] nonDuplicates = [];
-	list[int] numbOfDuplicates = [];
-	int count = 0;
-	int numDuplicates = 0;
-
+public int countDuplicates(lrel[str,int,int] allFilesIndices) {
+	list[str] duplicateLines = [x | <x,y,z> <- allFilesIndices] - dup([x | <x,y,z> <- allFilesIndices]); 
+	lrel[str,int,int] duplicateRelations = [<x,y,z> | <x,y,z> <- allFilesIndices, x in duplicateLines];
 	
-	for(int i <- [0..size(cleanStrings) - 1]) {
-		if(size(cleanStrings) > i && (cleanStrings[i] in nonDuplicates))
-			count += 1;
-		else {
-			if(count > 5) 
-				numDuplicates += 1;	
-				numbOfDuplicates += count;
-			nonDuplicates += cleanStrings[i];
-			count = 0;
+	int result = 0;
+	set[int] filesWithDuplicates = {z | <x,y,z> <- duplicateRelations};
+	//println(sort(filesWithDuplicates));
+
+	for(fileIndx <- filesWithDuplicates) {
+		list[int] indicesOfDupl = sort({y | <x,y,z> <- duplicateRelations, z == fileIndx});
+		
+		int lineCount = size(indicesOfDupl);
+		if(size(indicesOfDupl) > 5) {
+			int sizeDuplList  = size(indicesOfDupl) - 1;
+			int counter = 0;
+			
+			while(sizeDuplList  >= counter + 1) {
+				int countDupl = 0;
+				int index = indicesOfDupl[counter];
+				
+				counter += 1;
+				index += 1;	
+				while(sizeDuplList >= counter && index == indicesOfDupl[counter]) {
+					counter += 1;
+					index += 1;	
+					countDupl += 1;			
+				}
+						
+				if(countDupl > 5) {
+					result += countDupl;
+				}					
+			}
 		}
 	}
-	//println(nonDuplicates);
-	//println("Number of duplicates: <numDuplicates> ");
-	return numbOfDuplicates;
+	return result;
 }
 
-public int computeDuplication(set[loc] project){
-	list[int] duplicates = [];
-	n = 0;
-	for(s <- project){
-		file = readFileLines(s.top);
-		int codeLines = size(removeCommentsAndWspace(file));
-		n += codeLines;
-		duplicates += countDuplicates(file);
-	}
-	int percentage = percent(sum(duplicates),n);
+public int computeDuplication(lrel[str,int,int] projectLines, int numbOfLines){
+	int duplicates = countDuplicates(projectLines);
+	
+	println(duplicates);
+	int percentage = percent(duplicates, numbOfLines);
 	
 	println(percentage);
 	int result;

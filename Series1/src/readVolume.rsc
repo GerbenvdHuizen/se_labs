@@ -5,14 +5,8 @@ import String;
 import List;
 import helperFunctions;
 
-public int computeVolume (set[loc] project){
-	n = 0;
-	for(s <- project){
-		file = readFileLines(s.top);
-		int codeLines = size(removeCommentsAndWspace(file));
-		n += codeLines;
-	}
-	//println(n);
+public int computeVolume(int n){
+
 	int result;
 	if(n <= 66000) {
 		result = 5;
