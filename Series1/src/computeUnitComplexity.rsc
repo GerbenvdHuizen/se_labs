@@ -9,20 +9,20 @@ import helperFunctions;
 
 
 public void computeUnitComplexityRank (loc projectSource) {
-	m3Model = createM3FromEclipseProject(projectSource);
-	methodLocations = methods(m3Model);
-	riskPercentages = computeUnitComplexity(m3Model, methodLocations);
+	M3 m3Model = createM3FromEclipseProject(projectSource);
+	set[loc] methodLocations = methods(m3Model);
+	map[str, num] riskPercentages = computeUnitComplexity(m3Model, methodLocations);
 	println("Complexity per unit rank: " + getUnitComplexityRank(riskPercentages));
 }
 
 public map[str, num] computeUnitComplexity (M3 m3Model, set[loc] methodLocations) {
-	riskEvaluationLines = ("low": 0, "moderate": 0, "high": 0, "very high": 0, "total": 0);
+	map[str, int] riskEvaluationLines = ("low": 0, "moderate": 0, "high": 0, "very high": 0, "total": 0);
 	for (methodLocation <- methodLocations) {
-		methodLines = readFileLines(methodLocation);
-		methodCodeLines = countCodeLines(methodLines); 
-		methodAST = getMethodASTEclipse(methodLocation, model = m3Model);
-		methodComplexity = calculateMethodComplexity(methodAST);
-		methodRiskEvaluation = getMethodRiskEvaluation(methodComplexity);
+		list[str] methodLines = readFileLines(methodLocation);
+		int methodCodeLines = countCodeLines(methodLines); 
+		Declaration methodAST = getMethodASTEclipse(methodLocation, model = m3Model);
+		int methodComplexity = calculateMethodComplexity(methodAST);
+		str methodRiskEvaluation = getMethodRiskEvaluation(methodComplexity);
 		riskEvaluationLines[methodRiskEvaluation] += methodCodeLines;
 		riskEvaluationLines["total"] += methodCodeLines;
 	}
@@ -50,7 +50,7 @@ public int calculateMethodComplexity (Declaration methodAST) {
 
 // Evaluation is based on the table in the paper "A Practical Model for Measuring Maintainability".
 public str getMethodRiskEvaluation (int methodComplexity) {
-	if (methodComplexity >= 1 && methodComplexity <= 10) {
+	if (methodComplexity <= 10) {
 		return "low";
 	}
 	else if (methodComplexity >= 11 && methodComplexity <= 20) {
@@ -66,9 +66,9 @@ public str getMethodRiskEvaluation (int methodComplexity) {
 
 // Ranking is based on the table in the paper "A Practical Model for Measuring Maintainability".
 public str getUnitComplexityRank (map[str, num] riskPercentages) {
-	percentageModerate = riskPercentages["moderate"];
-	percentageHigh = riskPercentages["high"];
-	percentageVeryHigh = riskPercentages["very high"];
+	num percentageModerate = riskPercentages["moderate"];
+	num percentageHigh = riskPercentages["high"];
+	num percentageVeryHigh = riskPercentages["very high"];
 	if (percentageModerate <= 25 
 		&& percentageHigh == 0 
 		&& percentageVeryHigh == 0) {

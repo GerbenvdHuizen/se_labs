@@ -3,6 +3,7 @@ module computeDuplication
 import IO;
 import List;
 import String;
+import Set;
 
 import util::FileSystem;
 import util::Math;
@@ -11,69 +12,109 @@ import helperFunctions;
 
 
 public void computeDuplicationRank (loc projectSource) {
-	duplicationPercentage = computeDuplication(projectSource);
+	num duplicationPercentage = computeDuplication(projectSource);
 	println("Duplication rank: " + getDuplicationRank(duplicationPercentage)); 
 }
 
 public num computeDuplication(loc projectSource) {
-	allCodeLines = [];
-	sourceFiles = visibleFiles(projectSource);
-	for (sourceFile <- sourceFiles) {
-		lines = readFileLines(sourceFile);
-		codeLines = returnCodeLines(lines);
-		allCodeLines += codeLines;
-	}
-	allCodeLinesStr = oneString(allCodeLines);
-	duplicateCodeLines = numDuplicateCodeLines(allCodeLinesStr, allCodeLines);
-	duplicationPercentage = percent(duplicateCodeLines, size(allCodeLines));
+	set[loc] sourceFiles = visibleFiles(projectSource);
+	lrel[str, int, int] codeLinesInfo = getFileAndCodeLineIndices(sourceFiles);
+	int duplicateCodeLines = numDuplicateCodeLines(codeLinesInfo); 
+	println(duplicateCodeLines);
+	num duplicationPercentage = percent(duplicateCodeLines, size(codeLinesInfo));
 	return duplicationPercentage;
 }
 
-public str oneString(list[str] allCodeLines) {
-	result = "";
-	for (codeLine <- allCodeLines) {
-		result += codeLine + "\n";
+public lrel[str, int, int] getFileAndCodeLineIndices(set[loc] sourceFiles) {
+	lrel[str, int, int] codeLinesInfo = [];
+	int fileIndex = 1;
+	for (sourceFile <- sourceFiles) {
+		int lineIndex = 1;
+		list[str] lines = readFileLines(sourceFile);
+		list[str] codeLines = returnCodeLines(lines);
+		for (codeLine <- codeLines) {
+			codeLinesInfo += <codeLine, fileIndex, lineIndex>;
+			lineIndex += 1;
+		}
+		fileIndex += 1;
 	}
-	return result;
+	return codeLinesInfo;
 }
 
-public int numDuplicateCodeLines(str allCodeLinesStr, list[str] allCodeLinesList) {
-	duplicateCodeLines = 0;
-	loopCounter = 0;
-	maxIndex = size(allCodeLinesList) - 1;
-	while (loopCounter <= (size(allCodeLinesList) - 1)) {
-		codeBlock = [];
-		lineCounter = 0;
-		check = true;
-		while (check == true) {
-			if (loopCounter + lineCounter > maxIndex) {
-				loopCounter += 1;
-				break;
-			}
-			else {
-				codeBlock += allCodeLinesList[loopCounter + lineCounter];
-				if (lineCounter >= 5) {
-					codeBlockStr = oneString(codeBlock);
-					if (size(findAll(allCodeLinesStr, codeBlockStr)) < 2) {
-						check = false;
-						if (lineCounter == 5) {
-							loopCounter += 1;
-							break;
-						}
-						else {
-							check = false;
-							duplicateCodeLines += lineCounter;
-							loopCounter += lineCounter;
-							break;
-						}
-					}
+public int numDuplicateCodeLines(lrel[str, int, int] codeLinesInfo) {
+	list[str] duplicateCodeLines = [line | <line, fileIndex, lineIndex> <- codeLinesInfo] - dup([line | <line, fileIndex, lineIndex> <- codeLinesInfo]);
+	lrel[str, int, int] duplicateCodeLinesInfo = [<line, fileIndex, lineIndex> | <line, fileIndex, lineIndex> <- codeLinesInfo, line in duplicateCodeLines];
+	set[int] fileIndicesDuplicates = {fileIndex | <line, fileIndex, lineIndex> <- duplicateCodeLinesInfo};
+	int numDuplicateCodeLines = 0;
+	for (fileIndex <- fileIndicesDuplicates) {
+		list[int] lineIndicesDuplicates = sort({z | <x, y, z> <- duplicateCodeLinesInfo, y == fileIndex});
+		if (size(lineIndicesDuplicates) > 5) {
+			int counter = 0;
+			int maxIndex = size(lineIndicesDuplicates) - 1;
+			while (maxIndex >= counter + 1) {
+				int countDuplicateCodeLines = 0;
+				int lineIndex = lineIndicesDuplicates[counter];
+				counter += 1;
+				lineIndex += 1;
+				while (maxIndex >= counter && lineIndex == lineIndicesDuplicates[counter]) {
+					counter += 1;
+					lineIndex += 1;
+					countDuplicateCodeLines += 1;
 				}
-				lineCounter += 1;
+				if (countDuplicateCodeLines > 5) {
+					numDuplicateCodeLines += countDuplicateCodeLines;
+				}
 			}
-		}
+		} 	
 	}
-	return duplicateCodeLines;
+	return numDuplicateCodeLines;
 }
+
+//public str oneString(list[str] allCodeLines) {
+//	str result = "";
+//	for (codeLine <- allCodeLines) {
+//		result += codeLine + "\n";
+//	}
+//	return result;
+//}
+
+//public int numDuplicateCodeLines(str allCodeLinesStr, list[str] allCodeLinesList) {
+//	int duplicateCodeLines = 0;
+//	int loopCounter = 0;
+//	int maxIndex = size(allCodeLinesList) - 1;
+//	while (loopCounter <= (size(allCodeLinesList) - 1)) {
+//		list[str] codeBlock = [];
+//		int lineCounter = 0;
+//		bool check = true;
+//		while (check == true) {
+//			if (loopCounter + lineCounter > maxIndex) {
+//				loopCounter += 1;
+//				break;
+//			}
+//			else {
+//				codeBlock += allCodeLinesList[loopCounter + lineCounter];
+//				if (lineCounter >= 5) {
+//					codeBlockStr = oneString(codeBlock);
+//					if (size(findAll(allCodeLinesStr, codeBlockStr)) < 2) {
+//						check = false;
+//						if (lineCounter == 5) {
+//							loopCounter += 1;
+//							break;
+//						}
+//						else {
+//							check = false;
+//							duplicateCodeLines += lineCounter;
+//							loopCounter += lineCounter;
+//							break;
+//						}
+//					}
+//				}
+//				lineCounter += 1;
+//			}
+//		}
+//	}
+//	return duplicateCodeLines;
+//}
 
 // Ranking is based on the table in the paper "A Practical Model for Measuring Maintainability".
 public str getDuplicationRank(num duplicationPercentage) {
@@ -93,40 +134,3 @@ public str getDuplicationRank(num duplicationPercentage) {
 		return "--";
 	}
 }
-
-//public int numDuplicateCodeLines(list[str] allCodeLines) {
-//	codeBlock = [];
-//	codeBlocks = [];
-//	duplicateCodeLines = 0;
-//	for (i <- [1 .. (size(allCodeLines) + 1)] ) {
-//		codeBlock += allCodeLines[i - 1];
-//		if (i % 6 == 0) {
-//			if (codeBlock in codeBlocks) {
-//				duplicateCodeLines += 6;
-//			}
-//			else {
-//				codeBlocks += [codeBlock];	
-//			}
-//			codeBlock = [];
-//		}
-//	}
-//	return duplicateCodeLines;
-//}
-
-//public int numDuplicateCodeLines(list[str] allCodeLines) {
-//	duplicateCodeLines = 0;
-//	codeBlocks = [];
-//	for (i <- [0 .. (size(allCodeLines) - 5)] ) {
-//		codeBlock = [];
-//		for (j <- [0 .. 6]) {
-//			codeBlock += allCodeLines[i + j];
-//		}
-//		if (codeBlock in codeBlocks) {
-//			duplicateCodeLines += 6;
-//		}
-//		else {
-//			codeBlocks += [codeBlock];
-//		}
-//	}
-//	return duplicateCodeLines;
-//}
