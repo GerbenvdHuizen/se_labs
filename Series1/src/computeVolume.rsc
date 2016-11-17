@@ -7,9 +7,10 @@ import util::FileSystem;
 import helperFunctions;
 
 
-public void computeVolumeRank (loc projectSource) {
+public tuple[int, str] getVolume (loc projectSource) {
 	int totalCodeLines = computeVolume(projectSource);
-	println("Volume rank: " + getVolumeRank(totalCodeLines));
+	str volumeRank = getVolumeRank(totalCodeLines);
+	return <totalCodeLines, volumeRank>;
 }
 
 public int computeVolume (loc projectSource) {

@@ -11,16 +11,16 @@ import util::Math;
 import helperFunctions;
 
 
-public void computeDuplicationRank (loc projectSource) {
+public tuple[num, str] getDuplication (loc projectSource) {
 	num duplicationPercentage = computeDuplication(projectSource);
-	println("Duplication rank: " + getDuplicationRank(duplicationPercentage)); 
+	str duplicationRank = getDuplicationRank(duplicationPercentage);
+	return <duplicationPercentage, duplicationRank>;
 }
 
 public num computeDuplication(loc projectSource) {
 	set[loc] sourceFiles = visibleFiles(projectSource);
 	lrel[str, int, int] codeLinesInfo = getFileAndCodeLineIndices(sourceFiles);
-	int duplicateCodeLines = numDuplicateCodeLines(codeLinesInfo); 
-	println(duplicateCodeLines);
+	int duplicateCodeLines = numDuplicateCodeLines(codeLinesInfo);
 	num duplicationPercentage = percent(duplicateCodeLines, size(codeLinesInfo));
 	return duplicationPercentage;
 }

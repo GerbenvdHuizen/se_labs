@@ -8,11 +8,12 @@ import lang::java::jdt::m3::AST;
 import helperFunctions;
 
 
-public void computeUnitComplexityRank (loc projectSource) {
-	M3 m3Model = createM3FromEclipseProject(projectSource);
-	set[loc] methodLocations = methods(m3Model);
+public tuple[map[str, num], str] getUnitComplexity (M3 m3Model, set[loc] methodLocations) {
+	//M3 m3Model = createM3FromEclipseProject(projectSource);
+	//set[loc] methodLocations = methods(m3Model);
 	map[str, num] riskPercentages = computeUnitComplexity(m3Model, methodLocations);
-	println("Complexity per unit rank: " + getUnitComplexityRank(riskPercentages));
+	str unitComplexityRank = getUnitComplexityRank(riskPercentages);
+	return <riskPercentages, unitComplexityRank>;
 }
 
 public map[str, num] computeUnitComplexity (M3 m3Model, set[loc] methodLocations) {

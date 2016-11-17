@@ -7,11 +7,12 @@ import lang::java::jdt::m3::Core;
 import helperFunctions;
 
 
-public void computeUnitSizeRank (loc projectSource) {
-	M3 m3Model = createM3FromEclipseProject(projectSource);
-	set[loc] methodLocations = methods(m3Model);
+public tuple[map[str, num], str] getUnitSize (set[loc] methodLocations) {
+	//M3 m3Model = createM3FromEclipseProject(projectSource);
+	//set[loc] methodLocations = methods(m3Model);
 	map[str, num] riskPercentages = computeUnitSize(methodLocations);
-	println("Unit size rank: " + getUnitSizeRank(riskPercentages));
+	str unitSizeRank = getUnitSizeRank(riskPercentages);
+	return <riskPercentages, unitSizeRank>;
 }
 
 public map[str, num] computeUnitSize (set[loc] methodLocations) {
