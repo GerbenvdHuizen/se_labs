@@ -1,70 +1,81 @@
-/* 
-* Software Evolution
-* Series 1 code - Final version
-* computeUnitSize.rsc
-*
-* Vincent Erich - 10384081
-* Gerben van der Huizen - 10460748
-* November 2016
-*/
+/**
+ * Software Evolution - University of Amsterdam
+ * Practical Lab Series 1 - Software Metrics
+ * computeUnitSize.rsc
+ *
+ * Vincent Erich - 10384081
+ * Gerben van der Huizen - 10460748
+ * November 2016
+ */
+ 
 module computeUnitSize
 
 import IO;
+
 import lang::java::jdt::m3::Core;
+
 import helperFunctions;
 
-/*
- * Creates a tuple containing the risk evaluation percentages of unit size and
- * the unit size ranking.
+
+/**
+ * Returns a tuple containing the risk evaluation percentages of a Java 
+ * project and the corresponding unit size rank.
  *
- * @param Locations of all methods of a Java project (set[loc]).
- * @return Tuple with risk evaluation percentages (map[str, num]) and a rank (str).
+ * @param unitLocations		The locations of all the units in the Java project 
+ *							(set[loc]).
+ * @return 					A tuple with the risk evaluation percentages and 
+ *							the unit size rank (tuple[map[str, num], str].
  */
-public tuple[map[str, num], str] getUnitSize (set[loc] methodLocations) {
-	map[str, num] riskPercentages = computeUnitSize(methodLocations);
+public tuple[map[str, num], str] getUnitSize (set[loc] unitLocations) {
+	map[str, num] riskPercentages = computeUnitSize(unitLocations);
 	str unitSizeRank = getUnitSizeRank(riskPercentages);
 	return <riskPercentages, unitSizeRank>;
 }
 
-/*
- * Computes the unit size of each method of a set of project files.
- * Based on the evaluation of the unit size a category for that method is
- * chosen (i.e. low, moderate, high or very high). If a method belongs to
- * certain category +1 will be added to a dictionary value of that category.
- * The dictionary is used to calculated the risk evaluation percentages for
- * each category which is returned as a dictionary as well.
+/**
+ * Returns the risk evaluation percentages of a Java project (with regard to 
+ * the unit size metric). A method/constructor is the smallest unit in a Java 
+ * project.
+ * Based on the unit size of a unit, the unit is assigned to a risk evaluation 
+ * category (low, moderate, high, or very high). The corresponding dictionary 
+ * value of that risk evaluation category is then incremented by the number of 
+ * LOC of that unit. The dictionary also stores the total number of LOC of all 
+ * the units. The dictionary values are used to calculate the risk evaluation 
+ * percentages.
  *
- * @param Locations of all methods of a Java project (set[loc]).
- * @return The risk evaluation percentage dictionary (map[str,int]).
+ * @param unitLocations		The locations of all the units in the Java project 
+ *							(set[loc]).
+ * @return 					A dictionary with the risk evaluation percentages 
+ *							(map[str, num]).
  */
-public map[str, num] computeUnitSize (set[loc] methodLocations) {
+public map[str, num] computeUnitSize (set[loc] unitLocations) {
 	map[str, num] riskEvaluationLines = ("low": 0, "moderate": 0, "high": 0, "very high": 0, "total": 0);
-	for (methodLocation <- methodLocations) {
-		list[str] methodLines = readFileLines(methodLocation);
-		int methodCodeLines = countCodeLines(methodLines);
-		str methodRiskEvaluation = getMethodRiskEvaluation(methodCodeLines);
-		riskEvaluationLines[methodRiskEvaluation] += methodCodeLines; 
-		riskEvaluationLines["total"] += methodCodeLines;
+	for (unitLocation <- unitLocations) {
+		list[str] unitLines = readFileLines(unitLocation);
+		int unitCodeLines = countCodeLines(unitLines);
+		str unitRiskEvaluation = getUnitRiskEvaluation(unitCodeLines);
+		riskEvaluationLines[unitRiskEvaluation] += unitCodeLines; 
+		riskEvaluationLines["total"] += unitCodeLines;
 	}
 	return getRiskEvaluationPercentages(riskEvaluationLines);
 }
 
-/*
- * Determines the risk evaluation of a method
- * on certain thresholds. The thresholds are based on table III 
- * from the paper "Benchmark-based Aggregation of Metrics to Ratings".
+/**
+ * Returns a risk evaluation category based on the number of LOC. The 
+ * thresholds and risk evaluation categories are based on table III in the 
+ * paper "Benchmark-based Aggregation of Metrics to Ratings".
  *
- * @param Amount of lines of a unit/method (int).
- * @return The risk evaluation (str).
+ * @param unitCodeLines		The number of LOC (int).
+ * @return 					The risk evaluation category (str).
  */
-public str getMethodRiskEvaluation (int methodCodeLines) {
-	if (methodCodeLines <= 30) {
+public str getUnitRiskEvaluation (int unitCodeLines) {
+	if (unitCodeLines <= 30) {
 		return "low";
 	}
-	else if (methodCodeLines > 30 && methodCodeLines <= 44) {
+	else if (unitCodeLines > 30 && unitCodeLines <= 44) {
 		return "moderate";
 	}
-	else if (methodCodeLines > 44 && methodCodeLines <= 74) {
+	else if (unitCodeLines > 44 && unitCodeLines <= 74) {
 		return "high";
 	}
 	else {
@@ -72,14 +83,13 @@ public str getMethodRiskEvaluation (int methodCodeLines) {
 	}
 }
 
-/*
- * Determines the unit size rank of a Java project based
- * on certain percentage thresholds. The thresholds are based on table 
- * IV in the paper "Benchmark-based Aggregation of Metrics to Ratings".
+/**
+ * Returns a unit size rank based on the risk evaluation percentages. The 
+ * thresholds and ranks are based on table IV in the paper "Benchmark-based 
+ * Aggregation of Metrics to Ratings".
  *
- * @param Unit size dictionary with risk level (str) 
- * as key and the calculated percentage (num) as value.
- * @return The ranking (str).
+ * @param riskPercentages	The risk evaluation percentages (map[str, num]). 
+ * @return 					The unit size rank (str).
  */
 public str getUnitSizeRank (map[str, num] riskPercentages) {
 	num percentageModerate = riskPercentages["moderate"];

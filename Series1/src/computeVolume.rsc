@@ -1,24 +1,29 @@
-/* 
-* Software Evolution
-* Series 1 code - Final version
-* computeVolume.rsc
-*
-* Vincent Erich - 10384081
-* Gerben van der Huizen - 10460748
-* November 2016
-*/
+/**
+ * Software Evolution - University of Amsterdam
+ * Practical Lab Series 1 - Software Metrics
+ * computeVolume.rsc
+ *
+ * Vincent Erich - 10384081
+ * Gerben van der Huizen - 10460748
+ * November 2016
+ */
+
 module computeVolume
 
 import IO;
+
 import util::FileSystem;
+
 import helperFunctions;
 
 
-/*
- * Creates a tuple containing the LOC and volume ranking.
+/**
+ * Returns a tuple containing the number of LOC of a Java project and the 
+ * corresponding volume rank.
  *
- * @param Location of a java project (loc).
- * @return Tuple with LOC (int) and a rank (str).
+ * @param projectSource		The location of the java project (loc).
+ * @return 					A tuple with the number of LOC and the volume rank 
+ *							(tuple[int, str]).
  */
 public tuple[int, str] getVolume (loc projectSource) {
 	int totalCodeLines = computeVolume(projectSource);
@@ -26,11 +31,11 @@ public tuple[int, str] getVolume (loc projectSource) {
 	return <totalCodeLines, volumeRank>;
 }
 
-/*
- * Computes the volume or LOC of a Java project.
+/**
+ * Returns the number of LOC of a Java project (i.e., the volume).
  *
- * @param Location of a java project (loc).
- * @return Volume or LOC (int).
+ * @param projectSource		The location of the java project (loc).
+ * @return 					The number of LOC (int).
  */
 public int computeVolume (loc projectSource) {
 	set[loc] sourceFiles = visibleFiles(projectSource);
@@ -42,14 +47,13 @@ public int computeVolume (loc projectSource) {
 	return totalCodeLines;
 }
 
-/*
- * Determines the volume rank of a Java project based
- * on certain thresholds. The thresholds were taken from 
- * a table from page 25 of "A Practical Model for 
- * Measuring Maintainability".
+/**
+ * Returns a volume rank based on the number of LOC. The thresholds and ranks 
+ * are based on the table in the paper "A Practical Model for Measuring 
+ * Maintainability" (page 34).
  *
- * @param Volume or LOC (int).
- * @return The ranking (str).
+ * @param totalCodeLines	The number of LOC (int).
+ * @return 					The volume rank (str).
  */
 public str getVolumeRank (int totalCodeLines) {
 	if (totalCodeLines <= 66000) {

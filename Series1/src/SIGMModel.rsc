@@ -1,42 +1,51 @@
-/* 
-* Software Evolution
-* Series 1 code - Final version
-* SIGMModel.rsc
-*
-* Vincent Erich - 10384081
-* Gerben van der Huizen - 10460748
-* November 2016
-*/
+/**
+ * Software Evolution - University of Amsterdam
+ * Practical Lab Series 1 - Software Metrics
+ * SIGMModel.rsc
+ *
+ * Vincent Erich - 10384081
+ * Gerben van der Huizen - 10460748
+ * November 2016
+ */
+ 
 module SIGMModel
 
 import IO;
-import util::Math;
+
 import lang::java::jdt::m3::Core;
+import util::Math;
+
 import computeVolume;
 import computeUnitSize;
 import computeUnitComplexity;
 import computeDuplication;
 
-/*
- * Main method for testing all the metrics.
+
+/**
+ * Main method that calculates (and prints) the SIG Maintainability Model 
+ * scores for a Java project.
  *
- * @param Location of a java project (loc).
+ * @param projectSource		The location of the Java project (loc).
  */
 public void main(loc projectSource) {
 	println("START EVALUATION");
 	println("Creating M3 model...");
 	M3 m3Model = createM3FromEclipseProject(projectSource);
 	println("DONE");
-	println("Extracting method locations...");
-	set[loc] methodLocations = methods(m3Model);
+	println("Extracting file locations...");
 	set[loc] fileLocations = files(m3Model);
+	println("DONE");
+	println("Extracting unit locations (constructors and methods)...");
+	set[loc] constructorLocations = constructors(m3Model);
+	set[loc] methodLocations = methods(m3Model);
+	set[loc] unitLocations = constructorLocations + methodLocations;
 	println("DONE");
 	
 	println("Calculating volume...");
 	tuple[int, str] volume = getVolume(projectSource);
 	println("DONE");
 	println("Calculating unit size...");
-	tuple[map[str, num], str] unitSize = getUnitSize(methodLocations);
+	tuple[map[str, num], str] unitSize = getUnitSize(unitLocations);
 	println("DONE");
 	println("Calculating complexity per unit...");
 	tuple[map[str, num], str] unitComplexity = getUnitComplexity(m3Model, fileLocations);
@@ -45,9 +54,6 @@ public void main(loc projectSource) {
 	tuple[num, str] duplication = getDuplication(projectSource);
 	println("DONE");
 	
-	//map[str, int] rankToIntMapping = ("++": 5, "+": 4, "o": 3, "-": 2, "--": 1);
-	//map[int, str] intToRankMapping = (1: "-", 2: "-", 3: "o", 4: "+", 5: "++");
-	println(unitSize[0]["low"]);
 	str volumeRank = volume[1];
 	str unitSizeRank = unitSize[1];
 	str unitComplexityRank = unitComplexity[1];
@@ -72,11 +78,11 @@ public void main(loc projectSource) {
 	println("Characteristic: maintainability. Rank: <maintainabilityRank>.");
 }
 
-/*
- * Turns a rank into a number.
+/**
+ * Turns a rank into an integer.
  *
- * @param Rank (str).
- * @return Number (int).
+ * @param rank		The rank (str).
+ * @return 			The integer (int).
  */
 public int rankToInt (str rank) {
 	switch(rank) {
@@ -88,11 +94,11 @@ public int rankToInt (str rank) {
 	}
 }
 
-/*
- * Turns a number into a rank.
+/**
+ * Turns an integer into a rank.
  *
- * @param Number (int).
- * @return Rank (str).
+ * @param score		The integer (int).
+ * @return 			The rank (str).
  */
 public str intToRank (int score) {
 	switch(score) {

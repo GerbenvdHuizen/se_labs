@@ -1,29 +1,33 @@
-/* 
-* Software Evolution
-* Series 1 code - Final version
-* computeDuplication.rsc
-*
-* Vincent Erich - 10384081
-* Gerben van der Huizen - 10460748
-* November 2016
-*/
+/**
+ * Software Evolution - University of Amsterdam
+ * Practical Lab Series 1 - Software Metrics
+ * computeDuplication.rsc
+ *
+ * Vincent Erich - 10384081
+ * Gerben van der Huizen - 10460748
+ * November 2016
+ */
+ 
 module computeDuplication
 
 import IO;
 import List;
-import String;
 import Set;
+import String;
+
 import util::FileSystem;
 import util::Math;
+
 import helperFunctions;
 
 
-/*
- * Creates a tuple containing the percentage of duplicates
- * and the duplication ranking.
+/**
+ * Returns a tuple containing the duplication percentage of a Java project 
+ * and the corresponding duplication rank.
  *
- * @param Location of a java project (loc).
- * @return Tuple with the percentage of duplication (num) and a rank (str).
+ * @param projectSource		The location of the Java project (loc).
+ * @return 					A tuple with the duplication percentage and the 
+ *							duplication rank (tuple[num, str]).
  */
 public tuple[num, str] getDuplication (loc projectSource) {
 	num duplicationPercentage = computeDuplication(projectSource);
@@ -31,11 +35,11 @@ public tuple[num, str] getDuplication (loc projectSource) {
 	return <duplicationPercentage, duplicationRank>;
 }
 
-/*
- * Computes the percentage of duplicates in the code of a java project.
+/**
+ * Returns the duplication percentage of a Java project.
  *
- * @param Location of a java project (loc).
- * @return The percentage of duplication (num) in the input code (project).
+ * @param projectSource		The location of the Java project (loc).
+ * @return 					The duplication percentage (num).
  */
 public num computeDuplication(loc projectSource) {
 	set[loc] sourceFiles = visibleFiles(projectSource);
@@ -45,14 +49,16 @@ public num computeDuplication(loc projectSource) {
 	return duplicationPercentage;
 }
 
-/*
- * Returns all the line of code from a project with an line index
- * (which line number in a file is the line located on) and a file index 
- * (which file does the line come from).
+/**
+ * Returns all the lines of code in a Java project together with the file 
+ * index (i.e., the index of the file the line occurs in) and the line index 
+ * (i.e., the index of the line of the file the line occurs in).
  *
- * @param Locations of all files of a Java project (set[loc]).
- * @return List containing all lines of code of a java project
- * with line and file indices (lrel[str,int,int]).
+ * @param sourceFiles	The locations of all the source files of the Java 
+ *						project (set[loc]).
+ * @return 				A list relation containing all the lines of code in 
+ *						the Java project together with file indices and line 
+ *						indices (lrel[str, int, int]).
  */
 public lrel[str, int, int] getFileAndCodeLineIndices(set[loc] sourceFiles) {
 	lrel[str, int, int] codeLinesInfo = [];
@@ -70,14 +76,16 @@ public lrel[str, int, int] getFileAndCodeLineIndices(set[loc] sourceFiles) {
 	return codeLinesInfo;
 }
 
-/*
+/**
  * Returns the number of duplicate lines of code by finding all the files
- * with duplicates and then finding the blocks of duplicate code in those files.
- * The blocks of duplicate code have to contain at least 6 lines.
+ * that contain duplicate lines of code and then finding blocks of duplicate 
+ * lines in those files. 
+ * Blocks of duplicate lines >= six lines.
  *
- * @param List containing all lines of code of a java project
- * with line and file indices (lrel[str,int,int]).
- * @return The Number of duplicate lines found in the code of a Java project (int).
+ * @param codeLinesInfo		A list relation containing all the lines of code 
+ *							in the Java project together with file indices and 
+ *							line indices (lrel[str, int, int]).
+ * @return 					The number of duplicate code lines (int).
  */
 public int numDuplicateCodeLines(lrel[str, int, int] codeLinesInfo) {
 	list[str] duplicateCodeLines = [line | <line, fileIndex, lineIndex> <- codeLinesInfo] - dup([line | <line, fileIndex, lineIndex> <- codeLinesInfo]);
@@ -108,14 +116,13 @@ public int numDuplicateCodeLines(lrel[str, int, int] codeLinesInfo) {
 	return numDuplicateCodeLines;
 }
 
-/*
- * Determines the Duplication rank of a Java project based
- * on certain thresholds. The thresholds were taken from 
- * a table from page 27 of "A Practical Model for 
- * Measuring Maintainability".
+/**
+ * Returns a duplication rank based on the duplication percentage. The 
+ * thresholds and ranks are based on the table in the paper "A Practical 
+ * Model for Measuring Maintainability" (page 36).
  *
- * @param Duplication percentage (num).
- * @return The ranking (str).
+ * @param duplicationPercentage		The duplication percentage (num).
+ * @return 							The duplication rank (str).
  */
 public str getDuplicationRank(num duplicationPercentage) {
 	if (duplicationPercentage >= 0 && duplicationPercentage <= 3) {
