@@ -28,7 +28,7 @@ public void main(loc projectSource) {
 	M3 m3Model = createM3FromEclipseProject(projectSource);
 	println("DONE");
 	println("Extracting method locations...");
-	set[loc] methodLocations = methods(m3Model);
+	set[loc] methodLocations = methods(m3Model) + constructors(m3Model);
 	set[loc] fileLocations = files(m3Model);
 	println("DONE");
 	
