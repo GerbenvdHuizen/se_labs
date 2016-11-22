@@ -1,31 +1,26 @@
-/**
- * Software Evolution - University of Amsterdam
- * Practical Lab Series 1 - Software Metrics
- * SIGMModel.rsc
- *
- * Vincent Erich - 10384081
- * Gerben van der Huizen - 10460748
- * November 2016
- */
- 
+/* 
+* Software Evolution
+* Series 1 code - Final version
+* SIGMModel.rsc
+*
+* Vincent Erich - 10384081
+* Gerben van der Huizen - 10460748
+* November 2016
+*/
 module SIGMModel
 
 import IO;
-
-import lang::java::jdt::m3::Core;
 import util::Math;
-
+import lang::java::jdt::m3::Core;
 import computeVolume;
 import computeUnitSize;
 import computeUnitComplexity;
 import computeDuplication;
 
-
-/**
- * Main method that calculates (and prints) the SIG Maintainability Model 
- * scores for a Java project.
+/*
+ * Main method for testing all the metrics.
  *
- * @param projectSource		The location of the Java project (loc).
+ * @param Location of a java project (loc).
  */
 public void main(loc projectSource) {
 	println("START EVALUATION");
@@ -75,14 +70,15 @@ public void main(loc projectSource) {
 	println("Characteristic: analysability. Rank: <analysabilityRank>.");
 	println("Characteristic: changeability. Rank: <changeabilityRank>.");
 	println("Characteristic: testability. Rank: <testabilityRank>.");
-	println("Characteristic: maintainability. Rank: <maintainabilityRank>.");
+	println("----------------------------------------");
+	println("Final maintainability rank: <maintainabilityRank>.");
 }
 
-/**
- * Turns a rank into an integer.
+/*
+ * Turns a rank into a number.
  *
- * @param rank		The rank (str).
- * @return 			The integer (int).
+ * @param Rank (str).
+ * @return Number (int).
  */
 public int rankToInt (str rank) {
 	switch(rank) {
@@ -94,11 +90,11 @@ public int rankToInt (str rank) {
 	}
 }
 
-/**
- * Turns an integer into a rank.
+/*
+ * Turns a number into a rank.
  *
- * @param score		The integer (int).
- * @return 			The rank (str).
+ * @param Number (int).
+ * @return Rank (str).
  */
 public str intToRank (int score) {
 	switch(score) {

@@ -55,7 +55,10 @@ public void mainTest(loc projectSource) {
 	println("DONE");
 	
 	// Tests here...
-	assert volume[0] == 31 : "Volume metric value incorrect. Calculated <volume[0]>, but should be 31...";
+	assert volume[0] == 93 : "Volume metric value incorrect. Calculated <volume[0]>, but should be 93...";
+	assert unitSize[0]["low"] == 64 &&  unitSize[0]["moderate"] == 36: "Unit size risk percentage value(s) incorrect. Calculated low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert unitComplexity[0]["low"] == 64 &&  unitComplexity[0]["moderate"] == 36: "Unit complexity risk percentage value(s) incorrect. Calculated low <unitComplexity[0]["low"]>% and moderate <unitComplexity[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert duplication[0] == 19 : "Duplication percentage value incorrect. Calculated <duplication[0]>%, but should be 19%...";
 	// Other tests here...
 	
 	str volumeRank = volume[1];
@@ -79,7 +82,8 @@ public void mainTest(loc projectSource) {
 	println("Characteristic: analysability. Rank: <analysabilityRank>.");
 	println("Characteristic: changeability. Rank: <changeabilityRank>.");
 	println("Characteristic: testability. Rank: <testabilityRank>.");
-	println("Characteristic: maintainability. Rank: <maintainabilityRank>.");
+	println("----------------------------------------");
+	println("Final maintainability rank: <maintainabilityRank>.");
 }
 
 /**
