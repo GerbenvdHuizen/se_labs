@@ -1,28 +1,33 @@
-/* 
-* Software Evolution
-* Series 1 code - Final version
-* SIGMModel.rsc
-*
-* Vincent Erich - 10384081
-* Gerben van der Huizen - 10460748
-* November 2016
-*/
-module SIGMModel
+/**
+ * Software Evolution - University of Amsterdam
+ * Practical Lab Series 1 - Software Metrics
+ * SIGMModelTest.rsc
+ *
+ * Vincent Erich - 10384081
+ * Gerben van der Huizen - 10460748
+ * November 2016
+ */
+ 
+module SIGMModelTest
 
 import IO;
-import util::Math;
+
 import lang::java::jdt::m3::Core;
+import util::Math;
+
 import computeVolume;
 import computeUnitSize;
 import computeUnitComplexity;
 import computeDuplication;
 
-/*
- * Main method for testing all the metrics.
+
+/**
+ * Main method that calculates (and prints) the SIG Maintainability Model 
+ * scores for a Java project.
  *
- * @param Location of a java project (loc).
+ * @param projectSource		The location of the Java project (loc).
  */
-public void main(loc projectSource) {
+public void mainTest(loc projectSource) {
 	println("START EVALUATION");
 	println("Creating M3 model...");
 	M3 m3Model = createM3FromEclipseProject(projectSource);
@@ -49,6 +54,13 @@ public void main(loc projectSource) {
 	tuple[num, str] duplication = getDuplication(projectSource);
 	println("DONE");
 	
+	// Tests here...
+	assert volume[0] == 93 : "Volume metric value incorrect. Calculated <volume[0]>, but should be 93...";
+	assert unitSize[0]["low"] == 64 &&  unitSize[0]["moderate"] == 36: "Unit size risk percentage value(s) incorrect. Calculated low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert unitComplexity[0]["low"] == 64 &&  unitComplexity[0]["moderate"] == 36: "Unit complexity risk percentage value(s) incorrect. Calculated low <unitComplexity[0]["low"]>% and moderate <unitComplexity[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert duplication[0] == 19 : "Duplication percentage value incorrect. Calculated <duplication[0]>%, but should be 19%...";
+	// Other tests here...
+	
 	str volumeRank = volume[1];
 	str unitSizeRank = unitSize[1];
 	str unitComplexityRank = unitComplexity[1];
@@ -74,11 +86,11 @@ public void main(loc projectSource) {
 	println("Final maintainability rank: <maintainabilityRank>.");
 }
 
-/*
- * Turns a rank into a number.
+/**
+ * Turns a rank into an integer.
  *
- * @param Rank (str).
- * @return Number (int).
+ * @param rank		The rank (str).
+ * @return 			The integer (int).
  */
 public int rankToInt (str rank) {
 	switch(rank) {
@@ -90,11 +102,11 @@ public int rankToInt (str rank) {
 	}
 }
 
-/*
- * Turns a number into a rank.
+/**
+ * Turns an integer into a rank.
  *
- * @param Number (int).
- * @return Rank (str).
+ * @param score		The integer (int).
+ * @return 			The rank (str).
  */
 public str intToRank (int score) {
 	switch(score) {
