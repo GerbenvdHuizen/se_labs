@@ -20,15 +20,15 @@ import util::Math;
 import helperFunctions;
 
 /**
- * Prints both the duplication percentage of a Java project 
- * and the corresponding duplication rank in the console.
+ * Prints the duplication percentage of a Java project and the corresponding 
+ * duplication rank in the console.
  *
  * @param projectSource		The location of the Java project source (loc).
  */
 public void computeDuplicationRank (loc projectSource) {
 	duplicationPercentage = computeDuplication(projectSource);
-	println(duplicationPercentage);
-	println("Duplication rank: " + getDuplicationRank(duplicationPercentage)); 
+	println("Duplication percentage: <duplicationPercentage> %.");
+	println("Duplication rank: <getDuplicationRank(duplicationPercentage)>."); 
 }
 
 /**
@@ -52,36 +52,41 @@ public num computeDuplication(loc projectSource) {
 }
 
 /**
- * Returns the code lines as one string.
+ * Returns a list with strings as one string.
  *
- * @param allCodeLines		Code lines of a project file (list[str]).
- * @return 					Code lines as one str with new lines (str).
+ * @param lines		The list with strings (list[str]).
+ * @return			The list with strings as one string (str).
  */
-public str oneString(list[str] allCodeLines) {
+public str oneString(list[str] lines) {
 	result = "";
-	for (codeLine <- allCodeLines) {
-		result += codeLine + "\n";
+	for (line <- lines) {
+		result += line + "\n";
 	}
 	return result;
 }
 
 /**
- * Start with the first line of the first (filtered) source file, create a code block of 
- * six consecutive lines, and check whether that code block occurs in any of the other source 
- * files (or in the same source file). If not, then take the next code block of six consecutive 
- * lines, etc. If so, then incrementally add one line to the code block until no match is found 
- * in any of the other source files. Aggregate the amount of lines found in each duplicate block
- * and return this amount.
+ * Returns the number of duplicate lines of code in the Java project.
+ * Start with the first line of the first (filtered) source file, create a 
+ * code block of six consecutive lines, and check whether that code block 
+ * occurs in any of the other source files (or in the same source file). If 
+ * not, then take the next code block of six consecutive lines, etc. If so, 
+ * then incrementally add one line to the code block until no match is found 
+ * in any of the other source files. Aggregate the number of lines of code 
+ * found in each duplicate code block and return this number.
  *
- * @param allCodeLinesStr 	All code lines of a project as a single string (str).
- * @param allCodeLinesList 	All code lines of a project as strings in a list (list[str]).
- * @return 					The amount of duplicate code lines of a project (int).
+ * @param allCodeLinesStr	All source code lines of the Java project as a 
+ *							single string (str).
+ * @param allCodeLinesList 	All source code lines of the Java project in a 
+ *							list (list[str]).
+ * @return 					The number of duplicate lines of code in the Java 
+ * 							project (int).
  */
 public int numDuplicateCodeLines(str allCodeLinesStr, list[str] allCodeLinesList) {
 	duplicateCodeLines = 0;
 	loopCounter = 0;
 	maxIndex = size(allCodeLinesList) - 1;
-	while (loopCounter <= (size(allCodeLinesList) - 1)) {
+	while (loopCounter <= maxIndex) {
 		codeBlock = [];
 		lineCounter = 0;
 		check = true;
