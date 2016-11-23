@@ -21,7 +21,7 @@ import helperFunctions;
  * Returns a tuple containing the number of LOC of a Java project and the 
  * corresponding volume rank.
  *
- * @param projectSource		The location of the java project (loc).
+ * @param projectSource		The location of the java project source (loc).
  * @return 					A tuple with the number of LOC and the volume rank 
  *							(tuple[int, str]).
  */
@@ -34,7 +34,7 @@ public tuple[int, str] getVolume (loc projectSource) {
 /**
  * Returns the number of LOC of a Java project (i.e., the volume).
  *
- * @param projectSource		The location of the java project (loc).
+ * @param projectSource		The location of the java project source (loc).
  * @return 					The number of LOC (int).
  */
 public int computeVolume (loc projectSource) {

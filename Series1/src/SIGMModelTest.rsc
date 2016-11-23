@@ -23,11 +23,10 @@ import computeDuplication;
 
 /**
  * Main method that calculates (and prints) the SIG Maintainability Model 
- * scores for a Java project.
- *
- * @param projectSource		The location of the Java project (loc).
+ * scores for the Java file TestClass.java.
  */
-public void mainTest(loc projectSource) {
+public void mainTest() {
+	loc projectSource = |project://Series1/src/TestClass.java|;
 	println("START EVALUATION");
 	println("Creating M3 model...");
 	M3 m3Model = createM3FromEclipseProject(projectSource);
@@ -54,12 +53,11 @@ public void mainTest(loc projectSource) {
 	tuple[num, str] duplication = getDuplication(projectSource);
 	println("DONE");
 	
-	// Tests here...
-	assert volume[0] == 93 : "Volume metric value incorrect. Calculated <volume[0]>, but should be 93...";
-	assert unitSize[0]["low"] == 64 &&  unitSize[0]["moderate"] == 36: "Unit size risk percentage value(s) incorrect. Calculated low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
-	assert unitComplexity[0]["low"] == 64 &&  unitComplexity[0]["moderate"] == 36: "Unit complexity risk percentage value(s) incorrect. Calculated low <unitComplexity[0]["low"]>% and moderate <unitComplexity[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
-	assert duplication[0] == 19 : "Duplication percentage value incorrect. Calculated <duplication[0]>%, but should be 19%...";
-	// Other tests here...
+	// Tests (asserts).
+	assert volume[0] == 93 : "Volume metric value incorrect! Calculated <volume[0]>, but should be 93...";
+	assert unitSize[0]["low"] == 63 &&  unitSize[0]["moderate"] == 37: "Unit size metric value incorrect! Calculated: low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 63% and moderate should be 37%...";
+	assert unitComplexity[0]["low"] == 64 &&  unitComplexity[0]["moderate"] == 36: "Complexity per unit metric value(s) incorrect! Calculated: low <unitComplexity[0]["low"]>% and moderate <unitComplexity[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert duplication[0] == 22 : "Duplication metric value incorrect!. Calculated <duplication[0]>%, but should be 22%...";
 	
 	str volumeRank = volume[1];
 	str unitSizeRank = unitSize[1];

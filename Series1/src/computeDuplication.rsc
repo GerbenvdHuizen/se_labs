@@ -25,7 +25,7 @@ import helperFunctions;
  * Returns a tuple containing the duplication percentage of a Java project 
  * and the corresponding duplication rank.
  *
- * @param projectSource		The location of the Java project (loc).
+ * @param projectSource		The location of the Java project source (loc).
  * @return 					A tuple with the duplication percentage and the 
  *							duplication rank (tuple[num, str]).
  */
@@ -38,7 +38,7 @@ public tuple[num, str] getDuplication (loc projectSource) {
 /**
  * Returns the duplication percentage of a Java project.
  *
- * @param projectSource		The location of the Java project (loc).
+ * @param projectSource		The location of the Java project source (loc).
  * @return 					The duplication percentage (num).
  */
 public num computeDuplication(loc projectSource) {
@@ -98,7 +98,8 @@ public int numDuplicateCodeLines(lrel[str, int, int] codeLinesInfo) {
 			int counter = 0;
 			int maxIndex = size(lineIndicesDuplicates) - 1;
 			while (maxIndex >= counter + 1) {
-				int countDuplicateCodeLines = 0;
+				//int countDuplicateCodeLines = 0;
+				int countDuplicateCodeLines = 1;
 				int lineIndex = lineIndicesDuplicates[counter];
 				counter += 1;
 				lineIndex += 1;

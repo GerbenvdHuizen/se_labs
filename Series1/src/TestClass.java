@@ -1,16 +1,15 @@
-import java.awt.Color;
-
 /**
  * Software Evolution - University of Amsterdam
  * Practical Lab Series 1 - Software Metrics
  * TestClass.java
- */
-
-/**
+ * 
  * Vincent Erich - 10384081
  * Gerben van der Huizen - 10460748
  * November 2016
  */
+
+import java.awt.Color;
+
 
 public class TestClass {
 	
@@ -52,8 +51,8 @@ public class TestClass {
 		}
 	}
 	
-	// Duplicate method
-	public void testMethodDuplicate() {
+	// Duplicate method.
+	public void testMethod2() {
 		if (this.age >= 18) {
 			System.out.println("Adult");
 		}
@@ -65,13 +64,13 @@ public class TestClass {
 		}
 	}
 	
-	//helper method to determine if given coordinates are in bounds
+	// Random method.
 	public void inBounds(Color[][] image, int row, int col) {	
 		System.out.println((row >= 0) && (row <= image.length) && (col >= 0)
 					&& (col < image[0].length));
 	}
 
-	// 14 lines
+	// 14 lines.
 	public void complexTestColor( Color[][] mat ) {	
 		boolean isRectangular = true;
 		int row = 1;
@@ -87,14 +86,12 @@ public class TestClass {
 		} catch (IndexOutOfBoundsException e) {
 		    System.err.println("IndexOutOfBoundsException: " + e.getMessage());
 		}
-		
 		System.out.println(isRectangular);
 	}
 	
-	// 32 lines
+	// 32 lines.
 	public void complexTestString( String monthString )	{	
 		int month = 8;
-
         switch (month) {
             case 1:  monthString = "January";
                      break;
@@ -123,8 +120,6 @@ public class TestClass {
             default: monthString = "Invalid month";
                      break;
         }
-        
-        System.out.println(monthString);      
-	}
-	
+        System.out.println(monthString);
+	}	
 }
