@@ -55,7 +55,7 @@ public void mainTest() {
 	
 	// Tests (asserts).
 	assert volume[0] == 93 : "Volume metric value incorrect! Calculated <volume[0]>, but should be 93...";
-	assert unitSize[0]["low"] == 63 &&  unitSize[0]["moderate"] == 37: "Unit size metric value incorrect! Calculated: low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 63% and moderate should be 37%...";
+	assert unitSize[0]["low"] == 64 &&  unitSize[0]["moderate"] == 36: "Unit size metric value incorrect! Calculated: low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
 	assert unitComplexity[0]["low"] == 64 &&  unitComplexity[0]["moderate"] == 36: "Complexity per unit metric value(s) incorrect! Calculated: low <unitComplexity[0]["low"]>% and moderate <unitComplexity[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
 	assert duplication[0] == 22 : "Duplication metric value incorrect!. Calculated <duplication[0]>%, but should be 22%...";
 	
