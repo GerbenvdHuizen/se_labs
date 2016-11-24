@@ -15,6 +15,7 @@ import List;
 import String;
 
 import util::FileSystem;
+import util::Benchmark;
 import util::Math;
 
 import helperFunctions;
@@ -26,9 +27,12 @@ import helperFunctions;
  * @param projectSource		The location of the Java project source (loc).
  */
 public void computeDuplicationRank (loc projectSource) {
+	cpuDuplicationStart = cpuTime();
 	duplicationPercentage = computeDuplication(projectSource);
+	cpuDuplicationEnd = cpuTime(); 
 	println("Duplication percentage: <duplicationPercentage> %.");
-	println("Duplication rank: <getDuplicationRank(duplicationPercentage)>."); 
+	println("Duplication rank: <getDuplicationRank(duplicationPercentage)>.");
+	println("Time to calculate duplication: <round((cpuDuplicationEnd - cpuDuplicationStart) / 1000000000.0)> sec."); 
 }
 
 /**

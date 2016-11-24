@@ -13,6 +13,7 @@ module SIGMModel
 import IO;
 
 import lang::java::jdt::m3::Core;
+import util::Benchmark;
 import util::Math;
 
 import computeVolume;
@@ -28,6 +29,8 @@ import computeDuplication;
  * @param projectSource		The location of the Java project source (loc).
  */
 public void main(loc projectSource) {
+	cpuMainStart = cpuTime();
+	
 	println("START EVALUATION");
 	println("Creating M3 model...");
 	M3 m3Model = createM3FromEclipseProject(projectSource);
@@ -51,7 +54,10 @@ public void main(loc projectSource) {
 	tuple[map[str, num], str] unitComplexity = getUnitComplexity(m3Model, fileLocations);
 	println("DONE");
 	println("Calculating duplication...");
+	cpuDuplicationStart = cpuTime();
 	tuple[num, str] duplication = getDuplication(projectSource);
+	cpuDuplicationEnd = cpuTime();
+	println("Time to calculate duplication: <round((cpuDuplicationEnd - cpuDuplicationStart) / 1000000000.0)> sec.");
 	println("DONE");
 	
 	str volumeRank = volume[1];
@@ -63,6 +69,8 @@ public void main(loc projectSource) {
 	str changeabilityRank = intToRank(round((rankToInt(unitComplexityRank) + rankToInt(duplicationRank)) / 2.0));
 	str testabilityRank = intToRank(round((rankToInt(unitComplexityRank) + rankToInt(unitSizeRank)) / 2.0));
 	str maintainabilityRank = intToRank(round((rankToInt(analysabilityRank) + rankToInt(changeabilityRank) + rankToInt(testabilityRank)) / 3.0));
+	
+	cpuMainEnd = cpuTime();
 	
 	println("\n----------RESULTS----------\n");
 	println("Project: <projectSource>\n");
@@ -77,6 +85,7 @@ public void main(loc projectSource) {
 	println("Characteristic: testability. Rank: <testabilityRank>.");
 	println("----------------------------------------");
 	println("Final maintainability rank: <maintainabilityRank>.");
+	println("Time to calculate SIG Maintainability model: <round((cpuMainEnd - cpuMainStart) / 1000000000.0)> sec.");
 }
 
 /**
