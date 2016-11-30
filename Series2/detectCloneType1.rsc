@@ -15,7 +15,7 @@ import computeVolume;
 public loc selectedProject = |project://Series2/src/|;
 public map[node, lrel[node, loc]] buckets = ();
 
-
+public map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses = ();
 
 public int massThreshold;
 public real similarityThreshold;
