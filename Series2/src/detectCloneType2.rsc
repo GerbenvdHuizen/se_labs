@@ -22,7 +22,7 @@ public num similarityThreshold = 1.0;
 // The clone classes.
 public map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses = ();
 
-public void cloneDetectionType1 () {
+public void cloneDetectionType2 () {
 	println("Creating AST of the project...");
 	AST = createAstsFromEclipseProject(projectSource, true);
 	println("DONE");
@@ -64,13 +64,22 @@ public void cloneDetectionType1 () {
 	
 	// Some prints for testing...
 	println("<size(cloneClasses)> clone classes detected.");
-	println("----------");
+	println("---------------------------------");
+	int classCounter = 1;
 	for (classKey <- cloneClasses) {
-		println("Clone pairs in class: <size(cloneClasses[classKey])>");
+		println("Clone pairs in class <classCounter>: <size(cloneClasses[classKey])>\n");
+		pairCounter = 1;
 		for (clonePair <- cloneClasses[classKey]) {
-			println("Locations of clones in pair: <clonePair[0][1]> + <clonePair[1][1]>");
+			println("Clone pair <pairCounter>:");
+			println("\> Content clone 1:");
+			println(readFile(clonePair[0][1]));
+			println("\> Content clone 2:"); 
+			println(readFile(clonePair[1][1]));
+			println();
+			pairCounter += 1;
 		}
-		println("----------");
+		classCounter += 1;
+		println("---------------------------------");
 	}
 }
 
