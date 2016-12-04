@@ -14,6 +14,9 @@
             font-family:"Arial";
 		}
 		
+		.buttontext text,
+		.background text,
+		.buttonGroup text,
 		.mono text,
 		.legend text,
 		.row text,
@@ -26,10 +29,27 @@
 			user-select: none;
 		}
 		
+		.svg {
+			pointer-events: none;
+		}
+		
 		.row rect,
 		.column rect,
 		.cell rect {
 			shape-rendering: geometricPrecision;
+		}
+		
+		div.tooltip {	
+			position: absolute;			
+			text-align: center;			
+			width: auto;					
+			height: auto;					
+			padding: 2px;				
+			font: 12px sans-serif;		
+			background: lightsteelblue;	
+			border: 0px;		
+			border-radius: 8px;			
+			pointer-events: none;			
 		}
 		
 		</style>
@@ -55,13 +75,125 @@
 		}
 		
 		function fillMatrix(first, second) {
-			var x = 0;
-			for (var i = 1; i < clonesFilesData.length; i++) {
+			var x = [0,"",""];
+			for (var i = 0; i < clonesFilesData.length; i++) {
 				if (clonesFilesData[i][0] == first && clonesFilesData[i][1] == second) {
-					x = clonesFilesData[i][2];
+					x = [clonesFilesData[i][2], first, second];
 				}
 			}
 			return x;
+		}
+		
+		function sortByColumn(a, colIndex){
+
+			a.sort(sortFunction);
+
+			function sortFunction(a, b) {
+				if (a[colIndex] === b[colIndex]) {
+					return 0;
+				}
+				else {
+					return (a[colIndex] > b[colIndex]) ? -1 : 1;
+				}
+			}
+
+			return a;
+		}
+		/*
+		function sortMatrix(matrix) {
+			sortedMatrix = matrix;
+			for (var i = 0; i < matrix.length; i++) {
+				column = [];
+				for (var j = 0; j < matrix.length; j++) {
+					column.push(matrix[j][i]);
+				}
+				newColumn = sortByColumn(column, 0);
+				for (var j = 0; j < matrix.length; j++) {
+					sortedMatrix[j][i] = newColumn[j];
+				}
+			}
+			
+			for (var i = 0; i < matrix.length; i++) {
+				row = sortedMatrix[i];
+				
+				newRow = sortByColumn(row, 0);
+				
+				sortedMatrix[i] = newRow;
+				
+			}
+			
+			return sortedMatrix;
+		}
+		*/
+		function sortMatrix(inputMatrix) {
+			sortedMatrix = [];
+			counter = 0
+			for (var i = 0; i < inputMatrix.length; i++) {
+				counter+=1;
+				sortedMatrix.push([]);
+				for (var j = 0; j < inputMatrix.length; j++) {
+					sortedMatrix[i].push([]);
+				}
+			}
+		
+			sortedMatrix2 = [];
+			for (var i = 0; i < inputMatrix.length; i++) {
+				sortedMatrix2.push([]);
+			}
+			
+			columnSums = [];
+			for (var i = 0; i < inputMatrix.length; i++) {
+				columnSum = 0;
+				for (var j = 0; j < inputMatrix.length; j++) {
+					columnSum += inputMatrix[j][i][0];
+				}
+				columnSums.push([columnSum,i]);
+			}
+			newColumn = sortByColumn(columnSums, 0);
+			for (var i = 0; i < inputMatrix.length; i++) {
+				for (var j = 0; j < inputMatrix.length; j++) {
+					sortedMatrix[i][j] = inputMatrix[i][newColumn[j][1]];
+				}
+			}
+			
+			rowSums = [];
+			
+			for (var i = 0; i < inputMatrix.length; i++) {
+				row = sortedMatrix[i];
+				rowSum = 0;
+				
+				for (var j = 0; j < inputMatrix.length; j++) {
+					rowSum += sortedMatrix[i][j][0];
+				}
+				rowSums.push([rowSum, i]);
+				
+			}
+			newRow = sortByColumn(rowSums, 0);
+			
+			for (var i = 0; i < inputMatrix.length; i++) {
+				sortedMatrix2[i] = sortedMatrix[newRow[i][1]];
+			}
+		
+			return sortedMatrix2;
+		}
+		
+		
+		function chooseColor(d) {
+			color = "black";
+			if (d[0] == 0)
+				color = "white";
+			else if (d[0] == 1)
+				color = "#c7e9b4";
+			else if (d[0] == 2)
+				color = "#7fcdbb";
+			else if (d[0] == 3)
+				color = "#41b6c4";
+			else if (d[0] >= 5 && d[0] < 15)
+				color = "#1d91c0";
+			else if (d[0] >= 15)
+				color = "#225ea8";
+			
+			return color
 		}
 		
 		var uniqueFiles = uniq(fileArray);
@@ -81,10 +213,126 @@
 			.attr("class", "background")
 			.attr("width", width)
 			.attr("height", height);
+		
+		var buttonGroup = svg.append("g").attr("class", "buttonGroup");
+		
+		var sortButton = buttonGroup.append("rect")
+			.attr("class", "button")
+			.attr("x", width * 1.014)
+			.attr("y", height * 0.508)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.attr("width", width * 0.044)
+			.attr("height", width * 0.022)
+			.style("fill", "#EBFCFF")
+			.style("stroke", "black")
+			.style("opacity", 0.7)
+			.style("cursor","pointer")
+			.on("click", function() {loadSorted();
+			});
+			
+		var sortButtonText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("Sort")
+			.attr("x", width *1.025)
+			.attr("y", height * 0.526)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ width * 0.011 +"px")
+			.style("cursor","pointer")
+			.on("click", function() {loadSorted();
+			});
+		
+		var sorted = 0;
+		
+		function loadSorted() {
+		
+			var sortedData = matrix;
+			
+			if (sorted == 0) {
+				sorted = 1;
+				sortedData = sortMatrix(matrix);
+				
+				buttonGroup.selectAll("rect")
+					.style("fill", "#1C545F");
+			} else {
+				sorted = 0;
+				sortedData = matrix;
+				
+				buttonGroup.selectAll("rect")
+					.style("fill", "#EBFCFF");
+			}
+			gridGroup.selectAll("g").remove();
+			gridGroup.selectAll("rect").remove();
+			gridGroup.selectAll("text").remove();
+			
+			var row = gridGroup.selectAll(".row")
+				.data(sortedData)
+			  .enter().append("g")
+				.attr("class", "row")
+				.attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
+			
+			row.selectAll(".cell")
+				.data(function(d) { return d; })
+			  .enter().append("rect")
+				.attr("class", "cell")
+				.attr("x", function(d, i) { return x(i); })
+				.attr("width", x.rangeBand())
+				.attr("height", y.rangeBand())
+				.style("stroke-width", 0.1)
+				.style("stroke", "black")
+				.on("mouseover", function(d,i,j) {	
+					div.transition()		
+						.duration(200)		
+						.style("opacity", .9);		
+					div	.html("Row "+ j +": " + d[1] + "; Column " + i + ": " + d[2] + "; # clones: " + d[0].toString())	
+						.style("left", (d3.event.pageX) + "px")		
+						.style("top", (d3.event.pageY - 70) + "px");	
+				})					
+				.on("mouseout", function(d) {		
+					div.transition()		
+						.duration(500)		
+						.style("opacity", 0);	
+				});
+				
+			row.append("text")
+				.attr("x", 0)
+				.attr("y", y.rangeBand() / 2)
+				.attr("dy", ".32em")
+				.attr("dx", "-.32em")
+				.attr("text-anchor", "end")
+				.style("font-size","10px")
+				.text(function(d, i) { return d[i][1]; });
+				
+			var column = gridGroup.selectAll(".column")
+				.data(sortedData)
+			  .enter().append("g")
+				.attr("class", "column")
+				.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+			
+			
+			column.append("text")
+				.attr("x", 6)
+				.attr("y", y.rangeBand() / 2)
+				.attr("dy", ".64em")
+				.attr("text-anchor", "start")
+				.style("font-size","10px")
+				.text(function(d, i) { return d[i][2]; });
+			
+			row.selectAll(".cell")
+				.attr("fill", function(d) { return chooseColor(d); } );
+		}
+		
+		var div = d3.select("body").append("div")	
+			.attr("class", "tooltip")
+			.style("left", "10px")
+			.style("top", "10px")
+			.style("opacity", 0);
 			
 		var numrows = uniqueFiles.length;
 		var numcols = uniqueFiles.length;
 		var matrix = new Array(numrows);
+		
+		var gridGroup = svg.append("g");
 		
 		for (var i = 0; i < numrows; i++) {
 		  matrix[i] = new Array(numcols);
@@ -92,8 +340,8 @@
 			matrix[i][j] = fillMatrix(uniqueFiles[i], uniqueFiles[j]);
 		  }
 		}
-		console.log(clonesFilesData);
-		//console.log(uniqueFiles);
+		//matrix = sortMatrix(matrix);
+		
 		console.log(matrix);
 		
 		var x = d3.scale.ordinal()
@@ -120,13 +368,13 @@
 		}
 		
 		var colorMap = d3.scale.quantile()
-			.domain([0,1,2,3, 5, 15, 40])
+			.domain([0, 1, 2, 3, 5, 15, 40])
 			//["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494"]
 			.range(["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8"]);    
 			//.range(["red", "black", "green"]);
 			//.range(["brown", "#ddd", "darkgreen"]);
 			
-		var row = svg.selectAll(".row")
+		var row = gridGroup.selectAll(".row")
 			.data(matrix)
 		  .enter().append("g")
 			.attr("class", "row")
@@ -140,10 +388,21 @@
 			.attr("width", x.rangeBand())
 			.attr("height", y.rangeBand())
 			.style("stroke-width", 0.1)
-			.style("stroke", "black");
-		
-		row.append("line")
-			.attr("x2", width);
+			.style("stroke", "black")
+			.on("mouseover", function(d,i,j) {	
+				div.transition()		
+					.duration(200)		
+					.style("opacity", .9);		
+				div	.html("Row "+ j +": " + d[1] + "; Column " + i + ": " + d[2] + "; # clones: " + d[0].toString())	
+					.style("left", (d3.event.pageX) + "px")		
+					.style("top", (d3.event.pageY - 70) + "px");	
+			})					
+			.on("mouseout", function(d) {		
+				div.transition()		
+					.duration(500)		
+					.style("opacity", 0);	
+			});
+			
 		
 		row.append("text")
 			.attr("x", 0)
@@ -152,16 +411,13 @@
 			.attr("dx", "-.32em")
 			.attr("text-anchor", "end")
 			.style("font-size","10px")
-			.text(function(d, i) { return uniqueFiles[i]; });
+			.text(function(d, i) { return d[i][1]; });
 			
-		var column = svg.selectAll(".column")
-			.data(columnLabels)
+		var column = gridGroup.selectAll(".column")
+			.data(matrix)
 		  .enter().append("g")
 			.attr("class", "column")
 			.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
-		
-		column.append("line")
-			.attr("x1", -width);
 		
 		column.append("text")
 			.attr("x", 6)
@@ -169,14 +425,13 @@
 			.attr("dy", ".64em")
 			.attr("text-anchor", "start")
 			.style("font-size","10px")
-			.text(function(d, i) { return d; });
+			.text(function(d, i) { return d[i][2]; });
 		
 		row.selectAll(".cell")
-			.data(function(d, i) { return matrix[i]; })
-			.style("fill", colorMap);
+			.attr("fill", function(d) { return chooseColor(d); } );
 			
 		var legend = svg.selectAll(".legend")
-		  .data([0].concat(colorMap.quantiles()), function(d) { return d; });
+		  .data([0,1,2,3,5,15]);
 
 		legend.enter().append("g")
 		  .attr("class", "legend");
