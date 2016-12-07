@@ -58,16 +58,16 @@ public class TestClass {
 	}
 	
 	// This is a another duplicate, but with different names.
-		public int getAgeInTenYears3 () {
-			int currentAge3 = this.age;
-			int newAge3 = currentAge3;
-			for(int x = 1; x < 11; x++) {
-				newAge3 += 1;
-			}
-			System.out.println(currentAge3);
-			System.out.println(newAge3);
-			return newAge3;
+	public int getAgeInTenYears3 () {
+		int currentAge3 = this.age;
+		int newAge3 = currentAge3;
+		for(int x = 1; x < 11; x++) {
+			newAge3 += 1;
 		}
+		System.out.println(currentAge3);
+		System.out.println(newAge3);
+		return newAge3;
+	}
 	
 	public String getName () {
 		return this.name;

@@ -8,21 +8,37 @@ import lang::java::jdt::m3::Core;
 
 import util::Math;
 
+import computeVolume;
+import writeToCSV;
 
-// The source code to test.
-public loc projectSource = |project://Series2/src/TestClass.java|;
+
+// The source code to analyze.
+public loc projectSource = |project://Series2/src/TestClass.java|; //public loc projectSource = |project://small_project/src/|;
+// The (final) clone classes.
+public map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses = ();
+// The source of the csv file with clone data (to visualize).
+public loc cloneDataSource = |project://Series2/src/csv/cloneData.csv|;
 
 // The minimum subtree mass (number of nodes) value to be considered.
-public int massThreshold = 10;
+private int massThreshold = 10;
 // The buckets for the subtrees.
-public map[node, lrel[node, loc]] buckets = ();
+private map[node, lrel[node, loc]] buckets = ();
 // The threshold for the similarity between two subtrees.
-public num similarityThreshold = 1.0;
+private num similarityThreshold = 1.0;
+// Clone classes that are subsumed in other clone classes.
+private list[node] subsumedCloneClasses = [];
+// The clone statistics.
+private tuple[int, int, int, list[loc]] cloningStatistics = <0, 0, 0, []>;
 
-// The clone classes.
-public map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses = ();
+// ---------------------------------
 
-public void cloneDetectionType2 () {
+public void detectAndWrite () {
+	cloneDetectionType2();
+	writeToCSV();
+}
+
+
+private void cloneDetectionType2 () {
 	println("Creating AST of the project...");
 	AST = createAstsFromEclipseProject(projectSource, true);
 	println("DONE");
@@ -62,28 +78,32 @@ public void cloneDetectionType2 () {
 	}
 	println("DONE");
 	
-	// Some prints for testing...
-	println("<size(cloneClasses)> clone classes detected.");
-	println("---------------------------------");
-	int classCounter = 1;
-	for (classKey <- cloneClasses) {
-		println("Clone pairs in class <classCounter>: <size(cloneClasses[classKey])>\n");
-		pairCounter = 1;
-		for (clonePair <- cloneClasses[classKey]) {
-			println("Clone pair <pairCounter>:");
-			println("\> Content clone 1:");
-			println(readFile(clonePair[0][1]));
-			println("\> Content clone 2:"); 
-			println(readFile(clonePair[1][1]));
-			println();
-			pairCounter += 1;
+	println("Removing subsumed clones...");
+	for (cloneClass <- cloneClasses) {
+		for (clonePair <- cloneClasses[cloneClass]) {
+			checkSubsumedClones(clonePair[0]);
+			checkSubsumedClones(clonePair[1]);
 		}
-		classCounter += 1;
-		println("---------------------------------");
 	}
+	for (subsumedCloneClass <- subsumedCloneClasses) {
+		cloneClasses = delete(cloneClasses, subsumedCloneClass);
+	}
+	println("DONE");
+	
+	println("Computing cloning statistics...");
+	computeCloningStatistics();
+	list[int] cloneClassSizes = [size(cloneClasses[k]) | k:_ <- cloneClasses];
+	println("DONE");
+	println("The percentage of duplicated lines in the project is <cloningStatistics[0]>%.");
+	println("The project contains <cloningStatistics[1]> unique clones.");
+	println("<size(cloneClasses)> clone classes were extracted from the project.");
+	println("The biggest clone has <cloningStatistics[2]> lines.");
+	println("The biggest clone class has <max(cloneClassSizes)> clone pairs.");
 }
 
-public int getSubtreeMass (node subtree) {
+// ---------------------------------
+
+private int getSubtreeMass (node subtree) {
 	int subtreeMass = 0;
 	visit (subtree) {
 		case node x: subtreeMass += 1;
@@ -91,7 +111,9 @@ public int getSubtreeMass (node subtree) {
 	return subtreeMass;
 }
 
-public node normaliseSubtree (node subtree) {
+// ---------------------------------
+
+private node normaliseSubtree (node subtree) {
 	return visit (subtree) {
 		case \method(x, _, y, z, q) => \method(lang::java::jdt::m3::AST::short(), "methodName", y, z, q)
 		case \method(x, _, y, z) => \method(lang::java::jdt::m3::AST::short(), "methodName", y, z)
@@ -119,7 +141,9 @@ public node normaliseSubtree (node subtree) {
 	}
 }
 
-public void hashToBucket (node subtree) {
+// ---------------------------------
+
+private void hashToBucket (node subtree) {
 	loc subtreeLocation = extractSubtreeLocation(subtree);
 	if (subtreeLocation != projectSource && (subtreeLocation.end.line - subtreeLocation.begin.line) >= 6) {	
 		if ((Declaration d := subtree 
@@ -131,7 +155,9 @@ public void hashToBucket (node subtree) {
 	}
 }
 
-public loc extractSubtreeLocation (node subtree) {
+// ---------------------------------
+
+private loc extractSubtreeLocation (node subtree) {
 	switch(subtree) {
 		case Declaration d: if(d@src?) return d@src;
 		case Expression e: if(e@src?) return e@src;
@@ -141,7 +167,9 @@ public loc extractSubtreeLocation (node subtree) {
 	return projectSource;
 }
 
-public lrel[tuple[node, loc], tuple[node, loc]] removeSymmetricPairs (lrel[tuple[node, loc], tuple[node, loc]] bucketClonePairs) {
+// ---------------------------------
+
+private lrel[tuple[node, loc], tuple[node, loc]] removeSymmetricPairs (lrel[tuple[node, loc], tuple[node, loc]] bucketClonePairs) {
 	newBucketClonePairs = [];
 	for (clonePair <- bucketClonePairs) {
 		invertedClonePair = <<clonePair[1][0], clonePair[1][1]>, <clonePair[0][0], clonePair[0][1]>>;
@@ -152,7 +180,9 @@ public lrel[tuple[node, loc], tuple[node, loc]] removeSymmetricPairs (lrel[tuple
 	return newBucketClonePairs;
 }
 
-public num computeSimilarity (node subtree1, node subtree2) {
+// ---------------------------------
+
+private num computeSimilarity (node subtree1, node subtree2) {
 	// Similarity = 2 x S / (2 x S + L + R)
 	list[node] nodesSubtree1 = [];
 	list[node] nodesSubtree2 = [];
@@ -174,4 +204,63 @@ public num computeSimilarity (node subtree1, node subtree2) {
 	num r = size(nodesSubtree2 - nodesSubtree1); 
 	num similarity = (2 * s) / (2 * s + l + r); 
 	return similarity;
+}
+
+// ---------------------------------
+
+private void checkSubsumedClones (tuple[node, loc] clone) {
+	cloneTree = clone[0];
+	visit (cloneTree) {
+		case node x: {
+			if (x != cloneTree) {
+				if (getSubtreeMass(x) >= massThreshold) {
+					tuple[node, loc] currentClone = <x, extractSubtreeLocation(x)>;
+					if (isSubsumedCloneClass(currentClone)) {
+						subsumedCloneClasses += x;
+					}
+				}
+			}
+		}
+	}
+}
+
+// ---------------------------------
+
+private bool isSubsumedCloneClass (tuple[node, loc] clone) {
+	for (cloneClass <- cloneClasses) {
+		for (clonePair <- cloneClasses[cloneClass]) {
+			if ((clone[0] == clonePair[0][0] && clone[1] <= clonePair[0][1]) 
+				|| (clone[0] == clonePair[1][0] && clone[1] <= clonePair[1][1])) {
+					if (cloneClasses[clone[0]]?) {
+						if (size(cloneClasses[clone[0]]) == size(cloneClasses[cloneClass])) {
+							return true;
+						}
+					}
+				} 
+		}
+	}
+	return false;
+}
+
+// ---------------------------------
+
+private void computeCloningStatistics () {
+	lrel[tuple[node, loc], tuple[node, loc]] allClonePairs = [v | <k, v> <- toRel(cloneClasses)];
+	list[int] nLOCUniqueClones = [];
+	list[loc] uniqueCloneLocations = [];
+	
+	for (clonePair <- allClonePairs) {
+		for (int i <- [0 .. 2]) {
+			if (clonePair[i][1] notin uniqueCloneLocations) {
+				uniqueCloneLocations += clonePair[i][1];
+				nLOCUniqueClones += countCodeLines(readFileLines(clonePair[i][1]));
+			}
+		}
+	}
+	
+	nLOCProject = getVolume(projectSource);
+	cloningStatistics[0] = percent(sum(nLOCUniqueClones), nLOCProject);
+	cloningStatistics[1] = size(nLOCUniqueClones);
+	cloningStatistics[2] = max(nLOCUniqueClones);
+	cloningStatistics[3] = uniqueCloneLocations;
 }
