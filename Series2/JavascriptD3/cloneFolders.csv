@@ -1,0 +1,10 @@
+file1,file2,cloneAmount
+language,junit,0
+database,junit,1
+junit,language,0
+junit,junit,47
+language,database,0
+junit,database,1
+language,language,3
+database,database,188
+database,language,0
