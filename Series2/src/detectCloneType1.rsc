@@ -16,7 +16,7 @@ import util::FileSystem;
 import computeVolume;
 import helperFunctions;
 
-public loc selectedProject = |project://Assignment1Complex/src/|;
+public loc selectedProject = |project://Series2/src/|;
 public map[node, lrel[node, loc]] buckets = ();
 public list[node] subCloneClasses = [];
 
