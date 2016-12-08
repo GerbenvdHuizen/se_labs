@@ -13,11 +13,16 @@ import writeToCSV;
 
 
 // The source code to analyze.
-public loc projectSource = |project://Series2/src/TestClass.java|; //public loc projectSource = |project://small_project/src/|;
+//public loc projectSource = |project://Series2/src/TestClass.java|; 
+public loc projectSource = |project://small_project/src/|;
 // The (final) clone classes.
 public map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses = ();
-// The source of the csv file with clone data (to visualize).
-public loc cloneDataSource = |project://Series2/src/csv/cloneData.csv|;
+// The clone statistics.
+public tuple[int, int, int, list[loc]] cloningStatistics = <0, 0, 0, []>;
+// The source of the csv file with clone data on the 'file level'.
+public loc sourceCloneDataFiles = |project://Series2/src/csv/cloneDataFiles.csv|;
+// The source of the csv file with clone data on the 'folder level'.
+public loc sourceCloneDataFolders = |project://Series2/src/csv/cloneDataFolders.csv|;
 
 // The minimum subtree mass (number of nodes) value to be considered.
 private int massThreshold = 10;
@@ -27,20 +32,33 @@ private map[node, lrel[node, loc]] buckets = ();
 private num similarityThreshold = 1.0;
 // Clone classes that are subsumed in other clone classes.
 private list[node] subsumedCloneClasses = [];
-// The clone statistics.
-private tuple[int, int, int, list[loc]] cloningStatistics = <0, 0, 0, []>;
 
 // ---------------------------------
 
 public void detectAndWrite () {
+	resetVariables();
+	println("Starting clone detection...");
 	cloneDetectionType2();
+	println("DONE");
+	println("Starting creation datasets and writing to csv files...");
 	writeToCSV();
+	println("DONE");
 }
 
+// ---------------------------------
+
+private void resetVariables () {
+	buckets = ();
+	cloneClasses = ();
+	subsumedCloneClasses = [];
+	cloningStatistics = <0, 0, 0, []>;
+}
+
+// ---------------------------------
 
 private void cloneDetectionType2 () {
 	println("Creating AST of the project...");
-	AST = createAstsFromEclipseProject(projectSource, true);
+	AST = createAstsFromEclipseProject(projectSource, false);
 	println("DONE");
 	
 	// Steps 1 + 2 of the Basic Subtree Clone Detection Algorithm.
