@@ -5,6 +5,7 @@ import lang::java::jdt::m3::Core;
 import lang::csv::IO;
 
 import List;
+import String;
 import IO;
 import Set;
 import Prelude;
@@ -15,7 +16,7 @@ import util::FileSystem;
 import computeVolume;
 import helperFunctions;
 
-public loc selectedProject = |project://Assignment1/src/|;
+public loc selectedProject = |project://Assignment1Complex/src/|;
 public map[node, lrel[node, loc]] buckets = ();
 public list[node] subCloneClasses = [];
 
@@ -32,7 +33,7 @@ public void clone1Detection() {
 	
 	//model = createM3FromEclipseProject(selectedProject);
 	
-	ast = createAstsFromEclipseProject(selectedProject, true);
+	ast = createAstsFromEclipseProject(selectedProject, false);
 	//ast = normalizeNames(ast);
 	
 	buckets = ();
@@ -93,12 +94,14 @@ public void clone1Detection() {
 	println("The project contains <cloningStatisctics[1]> unique clones.");
 	println("The largest clone of the project has <cloningStatisctics[2]> lines.");
 	
-	fileRelationList = getCloneGraphData(cloneClasses);
-	
-	rel[str file1, str file2, int cloneAmount] R1 = createDataSet(visibleFiles(selectedProject), fileRelationList);
-	//rel[str file1, str file2, int cloneAmount] R1 = createDataSet(toSet(cloningStatisctics[3]), fileRelationList);
+	fileRelationList = getClonePairFiles(cloneClasses);
+	folderRelationList = getClonePairFolders(cloneClasses);
+	//rel[str file1, str file2, int cloneAmount] R1 = createDataSet(visibleFiles(selectedProject), fileRelationList);
+	rel[str file1, str file2, int cloneAmount] R1 = createDataSetFiles(toSet(cloningStatisctics[3]), fileRelationList);
+	rel[str folder1, str folder2, int cloneAmount] R2 = createDataSetFolders(toSet(cloningStatisctics[3]), folderRelationList);
 	//println(R1);
-	writeCSV(R1, |file:///xampp/htdocs/series2SE/allFiles.csv|);
+	writeCSV(R1, |file:///xampp/htdocs/series2SE/cloneFiles.csv|);
+	writeCSV(R2, |file:///xampp/htdocs/series2SE/cloneFolders.csv|);
 	//writeFile(|project://Series2/src/cloneClass.txt/|, oneString(stringClones));
 
 }
@@ -111,7 +114,7 @@ public str oneString(list[str] allCodeLines) {
 	return result;
 }
 
-public rel[str,str,int] createDataSet(set[loc] allFiles, lrel[str,str] cloneRelations){
+public rel[str,str,int] createDataSetFiles(set[loc] allFiles, lrel[str,str] cloneRelations){
 	rel[str,str,int] cloneDataSet = {};
 	count = 0;
 	for(file <- allFiles) {
@@ -137,8 +140,42 @@ public rel[str,str,int] createDataSet(set[loc] allFiles, lrel[str,str] cloneRela
 	return cloneDataSet;
 }
 
+public rel[str,str,int] createDataSetFolders(set[loc] allFolders, lrel[str,str] cloneRelations){
+	rel[str,str,int] cloneDataSet = {};
+	count = 0;
+	uniqueFolders = [];
+	for(folder <- allFolders) {
+		list[str] split0 = split("/", folder.path);
+		str folderN = split0[size(split0) - 2];
+		if (folderN notin uniqueFolders)
+			uniqueFolders += folderN;
+	}
+	println(uniqueFolders);
+	for(folderOut <- uniqueFolders) {
+		for(folderIn <- uniqueFolders) {
+			counter = 0;
+			for(relation <- cloneRelations) {
+				if((relation[0] == folderOut && relation[1] == folderIn) || (relation[1] == folderOut && relation[0] == folderIn)) {
+					counter += 1;
+				}
+				
+			}
+			if(counter > 0) {
+				//cloneDataSet += {<file.file, fileRel.file, counter>};
+				//println({<file.file, fileRel.file, counter>});
+				count += 1;
+			}
+			//println({<folderOut, folderIn, counter>});
+			cloneDataSet += {<folderOut, folderIn, counter>};
+			//println({<file.file, fileRel.file, counter>});
+			
+		}
+	}
+	println(count);
+	return cloneDataSet;
+}
 
-public lrel[str,str] getCloneGraphData(map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses) {
+public lrel[str,str] getClonePairFiles(map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses) {
 	lrel[str,str] allPairs = [];
 	for(cloneNode <- cloneClasses) {
 		for(pair <- cloneClasses[cloneNode]) {
@@ -147,7 +184,23 @@ public lrel[str,str] getCloneGraphData(map[node, lrel[tuple[node, loc], tuple[no
 	}
 	
 	return allPairs;
+}
+
+public lrel[str,str] getClonePairFolders(map[node, lrel[tuple[node, loc], tuple[node, loc]]] cloneClasses) {
+	lrel[str,str] allPairs = [];
+	for(cloneNode <- cloneClasses) {
+		for(pair <- cloneClasses[cloneNode]) {
+				list[str] split1 = split("/", pair[0][1].path);
+				str pair1 = split1[size(split1) - 2];
+				list[str] split2 = split("/", pair[1][1].path);
+				str pair2 = split2[size(split2) - 2];
+				allPairs += <pair1, pair2>;
+		}
+	}
+	
+	return allPairs;
 }  
+
 public tuple[int,int,int,list[loc]] getCloningStatistics(lrel[tuple[node, loc], tuple[node, loc]] nodeValues) {
 	uniqueNodeSizes = [];
 	uniqueLocations = [];
