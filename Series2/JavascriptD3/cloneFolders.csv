@@ -1,4 +1,4 @@
-file1,file2,cloneAmount
+folder1,folder2,nClonePairs
 language,junit,0
 database,junit,1
 junit,language,0

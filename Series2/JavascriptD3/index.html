@@ -1,6 +1,15 @@
 
 <!--
+	Software Evolution - University of Amsterdam
+	Practical Lab Series 2 - Software Metrics
+	index.html
 
+	Vincent Erich - 10384081
+	Gerben van der Huizen - 10460748
+	December 2016
+	
+	virtualscroller.js source:
+	http://bl.ocks.org/billdwhite/36d15bc6126e6f6365d0#virtualscroller.js
 -->
 
 <!DOCTYPE html>
@@ -9,9 +18,12 @@
         <meta charset="utf-8">
         <title></title>
         <script type="text/javascript" src="D3/d3.v3.js"></script>
+		<script src="virtualscroller.js"></script>
         <style>
 		body{
             font-family:"Arial";
+			width: 1600px;
+            height: 800px;
 		}
 		
 		.buttontext text,
@@ -52,21 +64,55 @@
 			pointer-events: none;			
 		}
 		
+		.viewport {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            overflow-y: auto;
+            width: 1570px;
+            height: 775px;
+            background-color: #e8e8e8;
+            border: 1px solid #AAAAAA;
+            border-radius: 4px;
+            box-shadow: inset 1px 1px 6px 2px rgba(0,0,0, .25);
+        }
+		
+		.detailview {
+           position: absolute;
+            top: 15px;
+            left: 15px;
+            overflow-y: auto;
+            width: auto;
+            height: auto;
+            background-color: #e8e8e8;
+            border: 1px solid #AAAAAA;
+            border-radius: 4px;
+            box-shadow: inset 1px 1px 6px 2px rgba(0,0,0, .25);	
+        }
+
 		</style>
     </head>
 <body>
+<div class="viewport"></div>
 <script>
-
-	d3.text("cloneFiles.csv", function(text) {
+	
+	///////////////////
+	// Read CSV file //
+	///////////////////
+	d3.text("clonefiles.csv", function(text) {
 		var parsedData = d3.csv.parseRows(text);
 		var clonesFilesData = [];
 		var fileArray = [];
 		for (var i = 1; i < parsedData.length; i++) {
 			fileArray.push(parsedData[i][0]);
-			clonesFilesData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2])]);
-			
+			clonesFilesData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2]),parsedData[i][3].toString()]);
 		}
 		
+		///////////////////////
+		//	Helper functions //
+		///////////////////////
+		
+		// Get unique items from array.
 		function uniq(a) {
 			var seen = {};
 			return a.filter(function(item) {
@@ -74,16 +120,17 @@
 			});
 		}
 		
+		// Fill a matrix with data.
 		function fillMatrix(first, second) {
 			var x = [0,"",""];
 			for (var i = 0; i < clonesFilesData.length; i++) {
 				if (clonesFilesData[i][0] == first && clonesFilesData[i][1] == second) {
-					x = [clonesFilesData[i][2], first, second];
+					x = [clonesFilesData[i][2], first, second, clonesFilesData[i][3]];
 				}
 			}
 			return x;
 		}
-		
+		// sort a today array by the column/index of an element.
 		function sortByColumn(a, colIndex){
 
 			a.sort(sortFunction);
@@ -99,32 +146,8 @@
 
 			return a;
 		}
-		/*
-		function sortMatrix(matrix) {
-			sortedMatrix = matrix;
-			for (var i = 0; i < matrix.length; i++) {
-				column = [];
-				for (var j = 0; j < matrix.length; j++) {
-					column.push(matrix[j][i]);
-				}
-				newColumn = sortByColumn(column, 0);
-				for (var j = 0; j < matrix.length; j++) {
-					sortedMatrix[j][i] = newColumn[j];
-				}
-			}
-			
-			for (var i = 0; i < matrix.length; i++) {
-				row = sortedMatrix[i];
-				
-				newRow = sortByColumn(row, 0);
-				
-				sortedMatrix[i] = newRow;
-				
-			}
-			
-			return sortedMatrix;
-		}
-		*/
+		
+		// Sort matrix by columns and rows.
 		function sortMatrix(inputMatrix) {
 			sortedMatrix = [];
 			counter = 0
@@ -177,7 +200,7 @@
 			return sortedMatrix2;
 		}
 		
-		
+		// Return a color code based on the integer input.
 		function chooseColor(d) {
 			color = "black";
 			if (d[0] == 0)
@@ -196,25 +219,102 @@
 			return color
 		}
 		
+		/*
+		function chooseColor(d) {
+			color = "black";
+			if (d[0] == 0)
+				color = "#fee5d9";
+			else if (d[0] == 1)
+				color = "#fcbba1";
+			else if (d[0] == 2)
+				color = "#fc9272";
+			else if (d[0] == 3)
+				color = "#fb6a4a";
+			else if (d[0] >= 4 && d[0] < 15)
+				color = "#de2d26";
+			else if (d[0] >= 15)
+				color = "#a50f15";
+			
+			return color
+		}
+		*/
+		// Determine font size.
+		function fontSize(d) {
+			fontSize = 10;
+			if (d >= 80)
+				fontSize = 7;
+			return fontSize;
+		}
+		
+		///////////////////////////
+		// Important definitions //
+		///////////////////////////
+		
+		var sorted = false;
+		var detail = false;
+		
 		var uniqueFiles = uniq(fileArray);
 		
-		var margin = {top: 175, right: 100, bottom: 100, left: 325},
+		var margin = {top: 175, right: 15, bottom: 0, left: 350},
 			width = 1400,
-			height = 1000;
+			height = 1000
+			innerWidth = 2000
+			innerHeight = 1500;
 			
-		var svg = d3.select("body").append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
+		var numrows = uniqueFiles.length;
+		var numcols = uniqueFiles.length;
+		var matrix = new Array(numrows);
+		var fontSize = fontSize(uniqueFiles.length);
+		
+		for (var i = 0; i < numrows; i++) {
+			matrix[i] = new Array(numcols);
+			for (var j = 0; j < numcols; j++) {
+				matrix[i][j] = fillMatrix(uniqueFiles[i], uniqueFiles[j]);
+			}
+		}
+		
+		var colors = ["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8"];
+		var gridSize = Math.floor(height / 24);
+		var legendElementWidth = gridSize*2;
+		var rowLabels = new Array(numrows);
+		
+		var x = d3.scale.ordinal()
+			.domain(d3.range(numcols))
+			.rangeBands([0, innerWidth]);
+			
+		var y = d3.scale.ordinal()
+			.domain(d3.range(numrows))
+			.rangeBands([0, innerHeight]);
+		
+		/////////////////////////////////////
+		// Define the visualization window //
+		/////////////////////////////////////
+		var svg = d3.select(".viewport").append("svg")
+            .attr("class", "scroll-svg")
+			.attr("width", innerWidth +  margin.left + margin.right)
+			.attr("height", innerHeight + margin.top + margin.bottom)
 			.style("margin-left", (-0.5* margin.left) + "px")
 		  .append("g")
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 			
 		svg.append("rect")
 			.attr("class", "background")
-			.attr("width", width)
-			.attr("height", height);
+			.attr("width", innerWidth)
+			.attr("height", innerHeight);
+			
+		var restGroup = d3.select("body").append("svg")
+			.attr("width", width + margin.left + 100)
+			.attr("height", 800)
+			.style("margin-left", (-0.5* margin.left) + "px")
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + "15" + ")")
+			.style("fill", "white");
+			
+		///////////////////////////////////////////
+		// Group of buttons and text for sorting //
+		///////////////////////////////////////////
 		
-		var buttonGroup = svg.append("g").attr("class", "buttonGroup");
+		var buttonGroup = restGroup.append("g").attr("class", "buttonGroup");
 			
 		var sortText = buttonGroup.append("text")
 			.attr("class", "buttontext")
@@ -222,8 +322,8 @@
 			.attr("x", width *1.02)
 			.attr("y", height * 0.51)
 			.attr("dy", "" + .3 + "ex")
+			.style("fill", "Black")
 			.style("font-size",""+ width * 0.011 +"px");
-		
 		
 		var clonesButton = buttonGroup.append("rect")
 			.data(["clonesButton"])
@@ -243,14 +343,16 @@
 			
 		var clonesButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
-			.text("#Clones")
-			.attr("x", width *1.02)
+			.text("# Pairs")
+			.attr("x", width *1.022)
 			.attr("y", height * 0.546)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ width * 0.011 +"px")
 			.style("cursor","pointer")
+			.style("fill", "Black")
 			.on("click", function() {loadSorted();
 			});
+			
 			
 		var folderButton = buttonGroup.append("rect")
 			.attr("class", "button")
@@ -273,24 +375,143 @@
 			.attr("y", height * 0.596)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ width * 0.011 +"px")
+			.style("fill", "Black")
 			.on("click", function(d,i){location.href = "folderView.html";})
 			.style("cursor", "pointer");
 		
-		var sorted = 0;
+		///////////////////////
+		// Define the pop-up //
+		///////////////////////
+		
+		var div = d3.select("body").append("div")	
+			.attr("class", "tooltip")
+			.style("left", "10px")
+			.style("top", "10px")
+			.style("opacity", 0);
+		
+		var divDetail = d3.select("body").append("div")	
+			.data(["details"])
+			.attr("class", "detailview")
+			.style("left", "10px")
+			.style("top", "10px")
+			.style("opacity", 0);
+		
+		/////////////////////////////////////////////////////////
+		// Create a grid group and define the rows and columns //
+		/////////////////////////////////////////////////////////
+		
+		var gridGroup = svg.append("g");
+			
+		var row = gridGroup.selectAll(".row")
+			.data(matrix)
+		  .enter().append("g")
+			.attr("class", "row")
+			.attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
+		
+		row.selectAll(".cell")
+			.data(function(d) { return d; })
+		  .enter().append("rect")
+			.attr("class", "cell")
+			.attr("x", function(d, i) { return x(i); })
+			.attr("width", x.rangeBand())
+			.attr("height", y.rangeBand())
+			.style("stroke-width", 0.5)
+			.style("stroke", "black")
+			.style("cursor","pointer")
+			.on("click", function(d) {loadDetail(d);})
+			.on("mouseover", function(d,i,j) {	
+				row.selectAll(".cell")
+					.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+					.style("stroke-width", 2.5);
+				div.transition()		
+					.duration(200)		
+					.style("opacity", .9);	
+				div	.html("Row "+ j +": " + d[1] + "<br> Column " + i + ": " + d[2] + "<br> # clone pairs: " + d[0].toString())	
+					.style("left", (d3.event.pageX) + "px")		
+					.style("top", (d3.event.pageY - 70) + "px");	
+			})					
+			.on("mouseout", function(d,i,j) {
+				row.selectAll(".cell")
+					.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+					.style("stroke-width", 0.5);
+				div.transition()		
+					.duration(500)		
+					.style("opacity", 0);	
+			});
+		
+		row.append("text")
+			.attr("x", 0)
+			.attr("y", y.rangeBand() / 2)
+			.attr("dy", ".32em")
+			.attr("dx", "-.64em")
+			.attr("text-anchor", "end")
+			.style("font-size", fontSize.toString() + "px")
+			.text(function(d, i) { return d[i][1]; });
+			
+		var column = gridGroup.selectAll(".column")
+			.data(matrix)
+		  .enter().append("g")
+			.attr("class", "column")
+			.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+		
+		column.append("text")
+			.attr("x", 6)
+			.attr("y", y.rangeBand() / 2)
+			.attr("dy", ".64em")
+			.attr("text-anchor", "start")
+			.style("font-size", fontSize.toString() + "px")
+			.text(function(d, i) { return d[i][2]; });
+		
+		row.selectAll(".cell")
+			.attr("fill", function(d) { return chooseColor(d); } );
+		
+		////////////////////////////////////////////
+		// Define the legend of the visualization //
+		////////////////////////////////////////////
+		
+		var legend = restGroup.selectAll(".legend")
+		  .data([0,1,2,3,4,15]);
+		
+		legend.enter().append("g")
+		  .attr("class", "legend");
+
+		legend.append("rect")
+			.attr("x", width + (gridSize / 2))
+			.attr("y", function(d, i) { return legendElementWidth * i; })
+			.attr("width", gridSize / 2)
+			.attr("height", legendElementWidth)
+			.style("stroke", "black")
+			.style("fill", function(d, i) { return colors[i]; });
+
+		legend.append("text")
+			.attr("class", "mono")
+			.text(function(d) { 
+				if (d >= 4)
+					return "≥ " + Math.round(d); 
+				else 
+					return Math.round(d);})
+			.attr("dy", ".75em")
+			.attr("x", width + (1.1*gridSize))
+			.style("fill", "Black")
+			.attr("y", function(d, i) { return (legendElementWidth* i); });
+
+		///////////////////////////////////////
+		// Update function for sorted matrix //
+		///////////////////////////////////////
 		
 		function loadSorted() {
 		
 			var sortedData = matrix;
 			
-			if (sorted == 0) {
-				sorted = 1;
+			if (sorted == false) {
+				sorted = true;
 				sortedData = sortMatrix(matrix);
 				
 				buttonGroup.selectAll("rect")
 					.filter(function(d) { return (d == "clonesButton"); })
 					.style("fill", "#1d91c0");
 			} else {
-				sorted = 0;
+				sorted = false;
 				sortedData = matrix;
 				
 				buttonGroup.selectAll("rect")
@@ -313,17 +534,25 @@
 				.attr("x", function(d, i) { return x(i); })
 				.attr("width", x.rangeBand())
 				.attr("height", y.rangeBand())
-				.style("stroke-width", 0.1)
+				.style("stroke-width", 0.5)
 				.style("stroke", "black")
+				.style("cursor","pointer")
+				.on("click", function(d) {loadDetail(d);})
 				.on("mouseover", function(d,i,j) {	
+					row.selectAll(".cell")
+						.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+						.style("stroke-width", 2.5);
 					div.transition()		
 						.duration(200)		
 						.style("opacity", .9);		
-					div	.html("Row "+ j +": " + d[1] + "; Column " + i + ": " + d[2] + "; # clones: " + d[0].toString())	
+					div	.html("Row "+ j +": " + d[1] + "<br> Column " + i + ": " + d[2] + "<br> # clone pairs: " + d[0].toString())	
 						.style("left", (d3.event.pageX) + "px")		
 						.style("top", (d3.event.pageY - 70) + "px");	
 				})					
-				.on("mouseout", function(d) {		
+				.on("mouseout", function(d,i,j) {
+					row.selectAll(".cell")
+						.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+						.style("stroke-width", 0.5);
 					div.transition()		
 						.duration(500)		
 						.style("opacity", 0);	
@@ -335,7 +564,7 @@
 				.attr("dy", ".32em")
 				.attr("dx", "-.32em")
 				.attr("text-anchor", "end")
-				.style("font-size","10px")
+				.style("font-size",fontSize.toString() + "px")
 				.text(function(d, i) { return d[i][1]; });
 				
 			var column = gridGroup.selectAll(".column")
@@ -350,145 +579,89 @@
 				.attr("y", y.rangeBand() / 2)
 				.attr("dy", ".64em")
 				.attr("text-anchor", "start")
-				.style("font-size","10px")
+				.style("font-size",fontSize.toString() + "px")
 				.text(function(d, i) { return d[i][2]; });
 			
 			row.selectAll(".cell")
 				.attr("fill", function(d) { return chooseColor(d); } );
 		}
 		
-		var div = d3.select("body").append("div")	
-			.attr("class", "tooltip")
-			.style("left", "10px")
-			.style("top", "10px")
-			.style("opacity", 0);
-			
-		var numrows = uniqueFiles.length;
-		var numcols = uniqueFiles.length;
-		var matrix = new Array(numrows);
+		/////////////////////////////////////////////////////////
+		// Update and remove functions for getting cell detail //
+		/////////////////////////////////////////////////////////
 		
-		var gridGroup = svg.append("g");
-		
-		for (var i = 0; i < numrows; i++) {
-		  matrix[i] = new Array(numcols);
-		  for (var j = 0; j < numcols; j++) {
-			matrix[i][j] = fillMatrix(uniqueFiles[i], uniqueFiles[j]);
-		  }
+		function isEven(n) {
+		   return n % 2 == 0;
 		}
-		//matrix = sortMatrix(matrix);
-		
-		console.log(matrix);
-		
-		var x = d3.scale.ordinal()
-			.domain(d3.range(numcols))
-			.rangeBands([0, width]);
-			
-		var y = d3.scale.ordinal()
-			.domain(d3.range(numrows))
-			.rangeBands([0, height]);
-		
-		var colors = ["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8"];
-		var gridSize = Math.floor(height / 24);
-		var legendElementWidth = gridSize*2;
-		var rowLabels = new Array(numrows);
-		
-		for (var i = 0; i < numrows; i++) {
-		  rowLabels[i] = uniqueFiles[i];
+
+		function isOdd(n) {
+		   return Math.abs(n % 2) == 1;
 		}
 		
-		var columnLabels = new Array(numrows);
-		
-		for (var i = 0; i < numcols; i++) {
-		  columnLabels[i] = uniqueFiles[i];
+		function splitLocations(locations) {
+			var res = locations.split("|file:///C:/Users/vince/workspace/");
+
+			if (res[0] == "[]")
+				return "<strong>No clone pairs</strong>";
+				
+			var totalString = "<strong>Clone pair locations:</strong> <br>"
+			var countPairs = 1;
+			var count = 1;
+			var pairSubString = "";
+			for (var i = 1; i < res.length; i++) {
+				var subString = "";
+				if (i == (res.length - 1)) {
+					subString = res[i].substring(0, res[i].length - 2);
+				} else if (isOdd(i)){
+					subString = res[i].substring(0, res[i].length - 1);
+				} else {
+					subString = res[i].substring(0, res[i].length - 3);
+				}
+				if(count == 1) {
+					count += 1;
+					pairSubString += ("Pair " + countPairs.toString() + ": <br>");
+					pairSubString += ("|" + subString + "<br>");
+				} else {
+					count = 1;
+					countPairs += 1;
+					pairSubString += ("|" + subString + "<br>");
+					totalString += pairSubString;
+					pairSubString = "";
+				}	
+			}
+			return totalString;
 		}
 		
-		var colorMap = d3.scale.quantile()
-			.domain([0, 1, 2, 3, 5, 15, 40])
-			//["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494"]
-			.range(["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8"]);    
-			//.range(["red", "black", "green"]);
-			//.range(["brown", "#ddd", "darkgreen"]);
+		function createString(data) {
+			var totalString = "<font size='6'><strong>Clone pair overview</strong></font> <br><br>";
+			totalString += "<strong>Number of clone pairs:</strong> <br>"+ data[0].toString() + "<br><br>";
+			totalString += "<strong>File names:</strong> <br>"+ data[1] + "<br>" + data[2] + "<br><br>";
+			totalString += splitLocations(data[3]);
+			return totalString;
+		}
+		function loadDetail(data) {
 			
-		var row = gridGroup.selectAll(".row")
-			.data(matrix)
-		  .enter().append("g")
-			.attr("class", "row")
-			.attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
+			divDetail.style("opacity", 1)
+				.html(createString(data))
+				.style("left", (d3.event.pageX + 50) + "px")		
+				.style("top", "200px")
+				.style("width", "380px")
+				.style("height", "400px")
+				.style("cursor", "pointer")
+				.on("click", function() {removeDetail();
+				});		
 		
-		row.selectAll(".cell")
-			.data(function(d) { return d; })
-		  .enter().append("rect")
-			.attr("class", "cell")
-			.attr("x", function(d, i) { return x(i); })
-			.attr("width", x.rangeBand())
-			.attr("height", y.rangeBand())
-			.style("stroke-width", 0.1)
-			.style("stroke", "black")
-			.on("mouseover", function(d,i,j) {	
-				div.transition()		
-					.duration(200)		
-					.style("opacity", .9);		
-				div	.html("Row "+ j +": " + d[1] + "; Column " + i + ": " + d[2] + "; # clones: " + d[0].toString())	
-					.style("left", (d3.event.pageX) + "px")		
-					.style("top", (d3.event.pageY - 70) + "px");	
-			})					
-			.on("mouseout", function(d) {		
-				div.transition()		
-					.duration(500)		
-					.style("opacity", 0);	
-			});
+		}
+		
+		function removeDetail() {
+
+			divDetail.style("opacity", 0)
+				.attr("class", "detailview")
+				.style("width", "0px")
+				.style("height", "0px")
+				.style("left", "0px")
+				.style("top", "0px");
+		}
 			
-		
-		row.append("text")
-			.attr("x", 0)
-			.attr("y", y.rangeBand() / 2)
-			.attr("dy", ".32em")
-			.attr("dx", "-.32em")
-			.attr("text-anchor", "end")
-			.style("font-size","10px")
-			.text(function(d, i) { return d[i][1]; });
-			
-		var column = gridGroup.selectAll(".column")
-			.data(matrix)
-		  .enter().append("g")
-			.attr("class", "column")
-			.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
-		
-		column.append("text")
-			.attr("x", 6)
-			.attr("y", y.rangeBand() / 2)
-			.attr("dy", ".64em")
-			.attr("text-anchor", "start")
-			.style("font-size","10px")
-			.text(function(d, i) { return d[i][2]; });
-		
-		row.selectAll(".cell")
-			.attr("fill", function(d) { return chooseColor(d); } );
-			
-		var legend = svg.selectAll(".legend")
-		  .data([0,1,2,3,5,15]);
-
-		legend.enter().append("g")
-		  .attr("class", "legend");
-
-		legend.append("rect")
-		.attr("x", width + (gridSize / 2))
-		.attr("y", function(d, i) { return legendElementWidth * i; })
-		.attr("width", gridSize / 2)
-		.attr("height", legendElementWidth)
-		.style("stroke", "black")
-		.style("fill", function(d, i) { return colors[i]; });
-
-		legend.append("text")
-		.attr("class", "mono")
-		.text(function(d) { 
-			if (d >= 5)
-				return "≥ " + Math.round(d); 
-			else 
-				return Math.round(d);})
-		.attr("dy", ".75em")
-		.attr("x", width + (1.1*gridSize))
-		.attr("y", function(d, i) { return (legendElementWidth* i); });
-
 	});
 </script>
