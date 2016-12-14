@@ -9,7 +9,7 @@ import lang::java::jdt::m3::Core;
 import util::Math;
 
 import computeVolume;
-import writeToCSV;
+//import writeToCSV;
 
 
 // The source code to analyze.
@@ -34,14 +34,14 @@ private list[node] subsumedCloneClasses = [];
 
 // ---------------------------------
 
-private void detectAndWrite () {
+public void detectTest () {
 	resetVariables();
 	println("Starting clone detection...");
 	cloneDetectionType2();
 	println("DONE");
-	println("Starting creation datasets and writing to csv files...");
-	writeToCSV();
-	println("DONE");
+	//println("Starting creation datasets and writing to csv files...");
+	//writeToCSV();
+	//println("DONE");
 }
 
 // ---------------------------------
@@ -122,7 +122,7 @@ private void cloneDetectionType2 () {
 	assert nUniqueClones == 5 : "Number of unique clones incorrect! Calculated: <nUniqueClones>, but should be 5...";
 	assert nCloneClasses == 2 : "Number of clone classes incorrect! Calculated: <nCloneClasses>, but should be 2...";
 	assert nLinesBiggestClone == 11 : "Number of lines of the biggest clone class incorrect!. Calculated: <duplication[0]>, but should be 11...";
-	assert nClonePairsBiggestCloneClass == 15 : "Number of clone pairs in the biggest clone class incorrect!. Calculated: <nClonePairsBiggestCloneClass>, but should be 15...";
+	assert nClonePairsBiggestCloneClass == 3 : "Number of clone pairs in the biggest clone class incorrect!. Calculated: <nClonePairsBiggestCloneClass>, but should be 3...";
 	
 	println("The percentage of duplicated lines in the project is <percentageDuplLines>%.");
 	println("The project contains <nUniqueClones> unique clones.");

@@ -12,9 +12,8 @@ import computeVolume;
 import writeToCSV;
 
 
-// The source code to analyze.
-public loc projectSource = |project://Series2/src/TestClass.java|; 
-//public loc projectSource = |project://small_project/src/|;
+// The source code to analyze. 
+public loc projectSource = |project://small_project/src/|;
 // The buckets for the subtrees.
 public map[node, lrel[node, loc]] buckets = ();
 // The (final) clone classes.
@@ -35,7 +34,7 @@ private list[node] subsumedCloneClasses = [];
 
 // ---------------------------------
 
-private void detectAndWrite () {
+public void detectAndWrite () {
 	resetVariables();
 	println("Starting clone detection...");
 	cloneDetectionType2();
