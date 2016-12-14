@@ -1,4 +1,4 @@
-module detectCloneType2
+module detectCloneType2Asserts
 
 import IO;
 import Prelude;
@@ -13,8 +13,7 @@ import writeToCSV;
 
 
 // The source code to analyze.
-public loc projectSource = |project://Series2/src/TestClass.java|; 
-//public loc projectSource = |project://small_project/src/|;
+public loc projectSource = |project://Series2/src/TestClass.java|;
 // The buckets for the subtrees.
 public map[node, lrel[node, loc]] buckets = ();
 // The (final) clone classes.
@@ -110,13 +109,26 @@ private void cloneDetectionType2 () {
 	
 	println("Computing cloning statistics...");
 	computeCloningStatistics();
-	list[int] cloneClassSizes = [size(cloneClasses[k]) | k:_ <- cloneClasses];
 	println("DONE");
-	println("The percentage of duplicated lines in the project is <cloningStatistics[0]>%.");
-	println("The project contains <cloningStatistics[1]> unique clones.");
-	println("<size(cloneClasses)> clone classes were extracted from the project.");
-	println("The biggest clone has <cloningStatistics[2]> lines.");
-	println("The biggest clone class has <max(cloneClassSizes)> clone pairs.");
+	
+	list[int] cloneClassSizes = [size(cloneClasses[k]) | k:_ <- cloneClasses];
+	int percentageDuplLines = cloningStatistics[0];
+	int nUniqueClones = cloningStatistics[1];
+	int nCloneClasses = size(cloneClasses);
+	int nLinesBiggestClone = cloningStatistics[2];
+	int nClonePairsBiggestCloneClass = max(cloneClassSizes);
+	
+	assert percentageDuplLines == 72 : "Percentage of duplicated lines incorrect! Calculated: <percentageDuplLines>%, but should be 72%...";
+	assert nUniqueClones == 5 : "Number of unique clones incorrect! Calculated: <nUniqueClones>, but should be 5...";
+	assert nCloneClasses == 2 : "Number of clone classes incorrect! Calculated: <nCloneClasses>, but should be 2...";
+	assert nLinesBiggestClone == 11 : "Number of lines of the biggest clone class incorrect!. Calculated: <duplication[0]>, but should be 11...";
+	assert nClonePairsBiggestCloneClass == 15 : "Number of clone pairs in the biggest clone class incorrect!. Calculated: <nClonePairsBiggestCloneClass>, but should be 15...";
+	
+	println("The percentage of duplicated lines in the project is <percentageDuplLines>%.");
+	println("The project contains <nUniqueClones> unique clones.");
+	println("<nCloneClasses> clone classes were extracted from the project.");
+	println("The biggest clone has <nLinesBiggestClone> lines.");
+	println("The biggest clone class has <nClonePairsBiggestCloneClass> clone pairs.");
 }
 
 // ---------------------------------
