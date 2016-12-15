@@ -1,19 +1,18 @@
 /**
  * Software Evolution - University of Amsterdam
  * Practical Lab Series 1 - Software Metrics
- * SIGMModel.rsc
+ * SIGMModelTest.rsc
  *
  * Vincent Erich - 10384081
  * Gerben van der Huizen - 10460748
  * November 2016
  */
-
-module SIGMModel
+ 
+module SIGMModelTest
 
 import IO;
 
 import lang::java::jdt::m3::Core;
-import util::Benchmark;
 import util::Math;
 
 import computeVolume;
@@ -24,13 +23,10 @@ import computeDuplication;
 
 /**
  * Main method that calculates (and prints) the SIG Maintainability Model 
- * scores for a Java project.
- *
- * @param projectSource		The location of the Java project source (loc).
+ * scores for the Java file TestClass.java.
  */
-public void main(loc projectSource) {
-	cpuMainStart = cpuTime();
-	
+public void mainTest() {
+	loc projectSource = |project://Series1/src/TestClass.java|;
 	println("START EVALUATION");
 	println("Creating M3 model...");
 	M3 m3Model = createM3FromEclipseProject(projectSource);
@@ -54,11 +50,14 @@ public void main(loc projectSource) {
 	tuple[map[str, num], str] unitComplexity = getUnitComplexity(m3Model, fileLocations);
 	println("DONE");
 	println("Calculating duplication...");
-	cpuDuplicationStart = cpuTime();
 	tuple[num, str] duplication = getDuplication(projectSource);
-	cpuDuplicationEnd = cpuTime();
-	println("Time to calculate duplication: <round((cpuDuplicationEnd - cpuDuplicationStart) / 1000000000.0)> sec.");
 	println("DONE");
+	
+	// Tests (asserts).
+	assert volume[0] == 93 : "Volume metric value incorrect! Calculated <volume[0]>, but should be 93...";
+	assert unitSize[0]["low"] == 64 &&  unitSize[0]["moderate"] == 36: "Unit size metric value incorrect! Calculated: low <unitSize[0]["low"]>% and moderate <unitSize[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert unitComplexity[0]["low"] == 64 &&  unitComplexity[0]["moderate"] == 36: "Complexity per unit metric value(s) incorrect! Calculated: low <unitComplexity[0]["low"]>% and moderate <unitComplexity[0]["moderate"]>%, but low should be 64% and moderate should be 36%...";
+	assert duplication[0] == 22 : "Duplication metric value incorrect!. Calculated <duplication[0]>%, but should be 22%...";
 	
 	str volumeRank = volume[1];
 	str unitSizeRank = unitSize[1];
@@ -69,8 +68,6 @@ public void main(loc projectSource) {
 	str changeabilityRank = intToRank(round((rankToInt(unitComplexityRank) + rankToInt(duplicationRank)) / 2.0));
 	str testabilityRank = intToRank(round((rankToInt(unitComplexityRank) + rankToInt(unitSizeRank)) / 2.0));
 	str maintainabilityRank = intToRank(round((rankToInt(analysabilityRank) + rankToInt(changeabilityRank) + rankToInt(testabilityRank)) / 3.0));
-	
-	cpuMainEnd = cpuTime();
 	
 	println("\n----------RESULTS----------\n");
 	println("Project: <projectSource>\n");
@@ -85,7 +82,6 @@ public void main(loc projectSource) {
 	println("Characteristic: testability. Rank: <testabilityRank>.");
 	println("----------------------------------------");
 	println("Final maintainability rank: <maintainabilityRank>.");
-	println("Time to calculate SIG Maintainability model: <round((cpuMainEnd - cpuMainStart) / 1000000000.0)> sec.");
 }
 
 /**
