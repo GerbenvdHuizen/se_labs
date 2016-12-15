@@ -1,7 +1,7 @@
 /**
  * Software Evolution - University of Amsterdam
  * Practical Lab Series 2 - Clone Detection
- * testFrame.rsc
+ * unitTests.rsc
  *
  * Vincent Erich - 10384081
  * Gerben van der Huizen - 10460748
@@ -23,14 +23,16 @@ import util::Math;
 
 import detectCloneType2;
 
-// Run all tests by typing :test in the rascal console.
+
+// NOTE: Run all the tests by importing this module in the RASCAL console and 
+// typing ':test'!
 
 /**
- * A test function which evaluates whether the getSubtreeMass function
- * works as intended. A small example tree with a mass of 5 is created
- * for the evaluation.
+ * A test function that evaluates whether the function 'getSubtreeMass'
+ * works as intended. A small example tree with a subtree mass of 5 is 
+ * created for the evaluation.
  *
- * @return 			Truth value of the test (Boolean).
+ * @return	Truth value of the test (bool).
  */
 test bool getSubtreeMassCheck() {
 	node testSubtree = makeNode("1", makeNode("2", makeNode("3", makeNode("4", makeNode("5")))));
@@ -40,13 +42,14 @@ test bool getSubtreeMassCheck() {
 }
 
 /**
- * A test function which evaluates whether the normaliseSubtree function
- * works as intended. Creates an abstract syntax tree from the TestClass.java
- * and normalises all of the nodes with the normaliseSubtree function. After
- * each node has been normalised it is checked for having normalised atributes
- * (where necessary). False is returned when an not-normalised node is found.
+ * A test function that evaluates whether the function 'normaliseSubtree'
+ * works as intended. Creates an Abstract Syntax Tree from the file 
+ * 'TestClass.java' and normalises all of the nodes with the function 
+ * 'normaliseSubtree'. After each node has been normalised, it is checked 
+ * for having normalised atributes (where necessary). False is returned when 
+ * a not-normalised node is found.
  *
- * @return 			Truth value of the test (Boolean).
+ * @return	Truth value of the test (bool).
  */
 test bool normaliseSubtreeCheck() {
 	int massThreshold = 10;
@@ -91,12 +94,13 @@ test bool normaliseSubtreeCheck() {
 }
 
 /**
- * A test function which evaluates whether the hashToBucket function works
- * as intended. A bucket is created for the purpose of this test. Since we know what
- * content and format the created bucket should have, the result from using the hashToBucket
- * function can simply be compared to this expected result. 
+ * A test function that evaluates whether the function 'hashToBucket' works 
+ * as intended. A bucket is created for the purpose of this test. Since we 
+ * know what content and format the created bucket should have, the result 
+ * of using the function 'hashToBucket' can simply be compared to this 
+ * expected result. 
  *
- * @return 			Truth value of the test (Boolean).
+ * @return	Truth value of the test (bool).
  */
 test bool hashToBucketCheck() {
 	resetVariables();
@@ -111,7 +115,6 @@ test bool hashToBucketCheck() {
 				|| Expression d := subtree
 				&& ("src" in getAnnotations(subtree)))
 					testNode = subtree;
-					//break;
 		}
 	}
 	
@@ -128,11 +131,11 @@ test bool hashToBucketCheck() {
 }
 
 /**
- * A test function which evaluates whether the removeSymmetricPairsCheck function
- * works as intended. The function is evaluated by checking whether it removes
- * the reflexive pair from a list containing two pairs. 
+ * A test function that evaluates whether the function 'removeSymmetricPairs' 
+ * works as intended. The function is evaluated by checking whether it removes 
+ * the reflexive pair from a list containing two pairs.
  *
- * @return 			Truth value of the test (Boolean).
+ * @return	Truth value of the test (bool).
  */
 test bool removeSymmetricPairsCheck() {
 	node testNode1 = makeNode("testNode1");
@@ -148,11 +151,11 @@ test bool removeSymmetricPairsCheck() {
 }
 
 /**
- * A test function which evaluates whether the computeSimilarity function
- * works as intended. The similarity between two simple trees is computed
+ * A test function that evaluates whether the function 'computeSimilarity' 
+ * works as intended. The similarity between two simple trees is computed 
  * and the result is checked for correctness.
  *
- * @return 			Truth value of the test (Boolean).
+ * @return	Truth value of the test (bool).
  */
 test bool computeSimilarityCheck() {
 	node testSubtree1_1 = makeNode("WoW I am different!");
@@ -164,5 +167,3 @@ test bool computeSimilarityCheck() {
 		return true;
 	return false;
 }
-
-// ---------------------------------
