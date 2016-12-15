@@ -1,3 +1,13 @@
+/**
+ * Software Evolution - University of Amsterdam
+ * Practical Lab Series 2 - Clone Detection
+ * writeToCSV.rsc
+ *
+ * Vincent Erich - 10384081
+ * Gerben van der Huizen - 10460748
+ * December 2016
+ */
+
 module writeToCSV
 
 import IO;
@@ -10,6 +20,10 @@ import util::FileSystem;
 import detectCloneType2;
 
 
+/**
+ * Creates a dataset with clone data on the 'file level' and a dataset with 
+ * clone data on the 'folder level', and writes the datasets to csv files.
+ */
 public void writeToCSV () {
 	lrel[loc, loc] clonePairLocations = getClonePairLocations();
 	lrel[str, str] clonePairFolders = getClonePairFolders();
@@ -28,8 +42,13 @@ public void writeToCSV () {
 	println("DONE");
 }
 
-// ---------------------------------
-
+/**
+ * Returns a list relation with relations between the locations of the clones 
+ * in a clone pair.
+ *
+ * @return	A list relation with relations between the locations of the clones 
+ *			in a clone pair (lrel[loc, loc]).
+ */
 private lrel[loc, loc] getClonePairLocations () {
 	lrel[loc, loc] clonePairLocations = [];
 	for (cloneClass <- cloneClasses) {
@@ -40,8 +59,24 @@ private lrel[loc, loc] getClonePairLocations () {
 	return clonePairLocations;
 }
 
-// ---------------------------------
-
+/**
+ * Returns the dataset with clone data on the 'file level'. Every row 
+ * (relation) in the dataset has four elements:
+ * - File 1;
+ * - File 2;
+ * - The number of clone pairs between the two files;
+ * - The locations of the clones in the clone pairs between the two files.
+ *
+ * @param uniqueCloneLocation	A set with all the (unique) locations of all 
+ *								the clones (set[loc]).
+ * @param clonePairLocations	A list relation with relations between the 
+ *								locations of the clones in a clone pair 
+ *								(lrel[loc, loc]).
+ * @return						The dataset with clone data on the 'file 
+ *								level', as described above 
+ *								(rel[str, str, int, lrel[loc, loc]]).
+ *								 
+ */
 private rel[str, str, int, lrel[loc, loc]] createCloneDataFiles (set[loc] uniqueCloneLocations, lrel[loc, loc] clonePairLocations) {
 	rel[str, str, int, list[tuple[loc, loc]]] cloneData = {};
 	for (cloneLocation1 <- uniqueCloneLocations) {
@@ -61,8 +96,13 @@ private rel[str, str, int, lrel[loc, loc]] createCloneDataFiles (set[loc] unique
 	return cloneData;
 }
 
-// ---------------------------------
-
+/**
+ * Returns a list relation with relations between the folders in which the 
+ * clones of a clone pair are located.
+ *
+ * @return	A list relation with relations between the folders in which the 
+ *			clones of a clone pair are located (lrel[str, str]).
+ */
 private lrel[str, str] getClonePairFolders () {
 	lrel[str, str] clonePairFolders = [];
 	for (cloneClass <- cloneClasses) {
@@ -77,8 +117,23 @@ private lrel[str, str] getClonePairFolders () {
 	return clonePairFolders;
 }
 
-// ---------------------------------
-
+/**
+ * Returns the dataset with clone data on the 'folder level'. Every row 
+ * (relation) in the dataset has three elements:
+ * - Folder 1;
+ * - Folder 2;
+ * - The number of clone pairs between the two folders.
+ *
+ * @param uniqueCloneLocation	A set with all the (unique) locations of all 
+ *								the clones (set[loc]).
+ * @param clonePairFolders		A list relation with relations between the 
+ *								folders in which the clones of a clone pair 
+ *								are located (lrel[str, str]).
+ * @return						The dataset with clone data on the 'folder 
+ *								level', as described above 
+ *								(rel[str, str, int]).
+ *								 
+ */
 private rel[str, str, int] createCloneDataFolders (set[loc] uniqueCloneLocations, lrel[str, str] clonePairFolders) {
 	rel[str, str, int] cloneData = {};
 	list[str] uniqueFolders = [];
@@ -103,5 +158,3 @@ private rel[str, str, int] createCloneDataFolders (set[loc] uniqueCloneLocations
 	}
 	return cloneData;
 }
-
-// ---------------------------------
