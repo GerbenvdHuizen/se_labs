@@ -1,0 +1,645 @@
+
+<!--
+	Software Evolution - University of Amsterdam
+	Practical Lab Series 2 - Clone Detection
+	largeProject.html
+
+	Vincent Erich - 10384081
+	Gerben van der Huizen - 10460748
+	December 2016
+	
+	Visualization based on:
+	https://www.cs.usask.ca/~croy/Theses/Thesis_Asaduzzaman_January2012.pdf
+	
+	virtualscroller.js source:
+	http://bl.ocks.org/billdwhite/36d15bc6126e6f6365d0#virtualscroller.js
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script type="text/javascript" src="js/D3/d3.v3.js"></script>
+		<script src="js/virtualscroller.js"></script>
+		<script src="js/helperFunctions.js"></script>
+        <style>
+		body{
+            font-family:"Arial";
+		}
+		
+		.buttontext text,
+		.background text,
+		.buttonGroup text,
+		.mono text,
+		.legend text,
+		.row text,
+		.column text {
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+		}
+		
+		.svg {
+			pointer-events: none;
+		}
+		
+		.row rect,
+		.column rect,
+		.cell rect {
+			shape-rendering: geometricPrecision;
+		}
+		
+		div.tooltip {	
+			position: absolute;			
+			text-align: center;			
+			width: auto;					
+			height: auto;					
+			padding: 2px;				
+			font: 12px sans-serif;		
+			background: lightsteelblue;	
+			border: 0px;		
+			border-radius: 8px;			
+			pointer-events: none;			
+		}
+		
+		.viewport {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            overflow-y: auto;
+            width: 1200px;
+            height: 700px;
+            background-color: #e8e8e8;
+            border: 1px solid #AAAAAA;
+            border-radius: 4px;
+            box-shadow: inset 1px 1px 6px 2px rgba(0,0,0, .25);
+        }
+		
+		.textfield {
+            position: absolute;
+            top: 650px;
+            left: 1330px;
+        }
+		
+		.detailview {
+           position: absolute;
+            top: 15px;
+            left: 15px;
+            overflow-y: auto;
+            width: auto;
+            height: auto;
+            background-color: #e8e8e8;
+            border: 1px solid #AAAAAA;
+            border-radius: 4px;
+            box-shadow: inset 1px 1px 6px 2px rgba(0,0,0, .25);	
+        }
+
+		</style>
+    </head>
+<body>
+<div class="viewport"></div>
+<div class="textfield">
+<input type="number" id="legendInput" style="font-size:16pt;height:40px;width:50px;" maxlength="3">
+</div>
+<script>
+	
+	///////////////////
+	// Read CSV file //
+	///////////////////
+	
+	d3.text("cloneDatafilesLarge.csv", function(text) {
+		var parsedData = d3.csv.parseRows(text);
+		var clonesFilesData = [];
+		var fileArray = [];
+		for (var i = 1; i < parsedData.length; i++) {
+			fileArray.push(parsedData[i][0]);
+			clonesFilesData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2]),parsedData[i][3].toString()]);
+		}
+		
+		///////////////////////////
+		// Important definitions //
+		///////////////////////////
+		
+		var sorted = false;
+		var detail = false;
+		var sortColor = false;
+		
+		var uniqueFiles = helperFunctions.uniq(fileArray);
+		
+		var margin = {top: 175, right: 15, bottom: 0, left: 350},
+			width = 1050,
+			height = 1000,
+			innerWidth = 4000,
+			innerHeight = 3000;
+			
+		var numrows = uniqueFiles.length;
+		var numcols = uniqueFiles.length;
+		var matrix = new Array(numrows);
+		var fontSize = helperFunctions.fontSize(uniqueFiles.length);
+		
+		for (var i = 0; i < numrows; i++) {
+			matrix[i] = new Array(numcols);
+			for (var j = 0; j < numcols; j++) {
+				matrix[i][j] = helperFunctions.fillMatrix(uniqueFiles[i], uniqueFiles[j], clonesFilesData);
+			}
+		}
+		
+		var colorMap = [1,2,3,4,15];
+		var colors = ["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8"];
+		var gridSize = Math.floor(height / 24);
+		var legendElementWidth = gridSize*2;
+		var rowLabels = new Array(numrows);
+		var sortedData = matrix;
+		
+		var x = d3.scale.ordinal()
+			.domain(d3.range(numcols))
+			.rangeBands([0, innerWidth]);
+			
+		var y = d3.scale.ordinal()
+			.domain(d3.range(numrows))
+			.rangeBands([0, innerHeight]);
+		
+		/////////////////////////////////////
+		// Define the visualization window //
+		/////////////////////////////////////
+		
+		var svg = d3.select(".viewport").append("svg")
+            .attr("class", "scroll-svg")
+			.attr("width", innerWidth +  margin.left + margin.right)
+			.attr("height", innerHeight + margin.top + margin.bottom)
+			.style("margin-left", (-0.5* margin.left) + "px")
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			
+		svg.append("rect")
+			.attr("class", "background")
+			.attr("width", innerWidth)
+			.attr("height", innerHeight);
+			
+		var restGroup = d3.select("body").append("svg")
+			.attr("width", width + margin.left + 500)
+			.attr("height", 800)
+			.style("margin-left", (-0.5* margin.left) + "px")
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + "15" + ")")
+			.style("fill", "white");
+			
+		///////////////////////////////////////////
+		// Group of buttons and text for sorting //
+		///////////////////////////////////////////
+		
+		var buttonGroup = restGroup.append("g").attr("class", "buttonGroup");
+			
+		var legendText = buttonGroup.append("text")
+			.attr("class", "legendtext")
+			.text("Colour by # clone pairs")
+			.attr("x", 1120)
+			.attr("y", 50)
+			.attr("dy", "" + .3 + "ex")
+			.style("fill", "Black")
+			.style("font-size",""+ 16 +"px");
+			
+		var sortText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("Sort by:")
+			.attr("x", 1060)
+			.attr("y", 520)
+			.attr("dy", "" + .3 + "ex")
+			.style("fill", "Black")
+			.style("font-size",""+ 16 +"px");
+		
+		var clonesButton = buttonGroup.append("rect")
+			.data(["clonesButton"])
+			.attr("class", "button")
+			.attr("x", 1050)
+			.attr("y", 530)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.attr("width", 75)
+			.attr("height", 40)
+			.style("fill", "#EBFCFF")
+			.style("stroke", "black")
+			.style("opacity", 0.7)
+			.style("cursor","pointer")
+			.on("click", function() {loadSorted();
+			});
+			
+		var clonesButtonText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("# Pairs")
+			.attr("x", 1060)
+			.attr("y", 552)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 16 +"px")
+			.style("cursor","pointer")
+			.style("fill", "Black")
+			.on("click", function() {loadSorted();
+			});
+			
+		
+		var folderButton = buttonGroup.append("rect")
+			.attr("class", "button")
+			.attr("x", 1050)
+			.attr("y", 580)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.attr("width", 75)
+			.attr("height", 40)
+			.style("fill", "#EBFCFF")
+			.style("stroke", "black")
+			.style("opacity", 0.7)
+			.on("click", function(d,i){location.href = "largeProjectFolderView.html";})
+			.style("cursor", "pointer");
+			
+		var folderButtonText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("Folder")
+			.attr("x", 1065)
+			.attr("y", 602)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 16 +"px")
+			.style("fill", "Black")
+			.on("click", function(d,i){location.href = "largeProjectFolderView.html";})
+			.style("cursor", "pointer");
+			
+		var colourButton = buttonGroup.append("rect")
+			.data(["colourButton"])
+			.attr("class", "button")
+			.attr("x", 1050)
+			.attr("y", 630)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.attr("width", 75)
+			.attr("height", 40)
+			.style("fill", "#EBFCFF")
+			.style("stroke", "black")
+			.style("opacity", 0.7)
+			.on("click", function(d,i){loadColours(document.getElementById("legendInput").value);})
+			.style("cursor", "pointer");
+			
+		var colourButtonText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("Colour")
+			.attr("x", 1065)
+			.attr("y", 652)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 16 +"px")
+			.style("fill", "Black")
+			.on("click", function(d,i){loadColours(document.getElementById("legendInput").value);})
+			.style("cursor", "pointer");
+			
+		var colourExtraText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("(Maximum amount")
+			.attr("x", 1208)
+			.attr("y", 640)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 14 +"px")
+			.style("fill", "Black");
+			
+		var colourExtraText2 = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("of clone pairs >15)")
+			.attr("x", 1208)
+			.attr("y", 660)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 14 +"px")
+			.style("fill", "Black");
+		
+		var dataButton = buttonGroup.append("rect")
+			.data(["dataButton"])
+			.attr("class", "button")
+			.attr("x", 1200)
+			.attr("y", 570)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.attr("width", 115)
+			.attr("height", 40)
+			.style("fill", "#EBFCFF")
+			.style("stroke", "black")
+			.style("opacity", 0.7)
+			.on("click", function(d,i){location.href = "index.html";})
+			.style("cursor", "pointer");
+			
+		var dataButtonText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("Small project")
+			.attr("x", 1210)
+			.attr("y", 592)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 16 +"px")
+			.style("fill", "Black")
+			.on("click", function(d,i){location.href = "index.html";})
+			.style("cursor", "pointer");
+			
+		///////////////////////////////
+		// Define the pop-up windows //
+		///////////////////////////////
+		
+		var div = d3.select("body").append("div")	
+			.attr("class", "tooltip")
+			.style("left", "10px")
+			.style("top", "10px")
+			.style("opacity", 0);
+		
+		var divDetail = d3.select("body").append("div")	
+			.data(["details"])
+			.attr("class", "detailview")
+			.style("left", "10px")
+			.style("top", "10px")
+			.style("opacity", 0);
+		
+		/////////////////////////////////////////////////////////
+		// Create a grid group and define the rows and columns //
+		/////////////////////////////////////////////////////////
+		
+		var gridGroup = svg.append("g");
+			
+		var row = gridGroup.selectAll(".row")
+			.data(matrix)
+		  .enter().append("g")
+			.attr("class", "row")
+			.attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
+		
+		row.selectAll(".cell")
+			.data(function(d) { return d; })
+		  .enter().append("rect")
+			.attr("class", "cell")
+			.attr("x", function(d, i) { return x(i); })
+			.attr("width", x.rangeBand())
+			.attr("height", y.rangeBand())
+			.style("stroke-width", 0.5)
+			.style("stroke", "black")
+			.style("cursor","pointer")
+			.on("click", function(d) {loadDetail(d);})
+			.on("mouseover", function(d,i,j) {	
+				row.selectAll(".cell")
+					.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+					.style("stroke-width", 2.5);
+				div.transition()		
+					.duration(200)		
+					.style("opacity", .9);	
+				div	.html("Row "+ j +": " + d[1] + "<br> Column " + i + ": " + d[2] + "<br> # clone pairs: " + d[0].toString())	
+					.style("left", (d3.event.pageX) + "px")		
+					.style("top", (d3.event.pageY - 70) + "px");	
+			})					
+			.on("mouseout", function(d,i,j) {
+				row.selectAll(".cell")
+					.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+					.style("stroke-width", 0.5);
+				div.transition()		
+					.duration(500)		
+					.style("opacity", 0);	
+			});
+		
+		row.append("text")
+			.attr("x", 0)
+			.attr("y", y.rangeBand() / 2)
+			.attr("dy", ".32em")
+			.attr("dx", "-.64em")
+			.attr("text-anchor", "end")
+			.style("font-size", fontSize.toString() + "px")
+			.text(function(d, i) { return d[i][1]; });
+			
+		var column = gridGroup.selectAll(".column")
+			.data(matrix)
+		  .enter().append("g")
+			.attr("class", "column")
+			.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+		
+		column.append("text")
+			.attr("x", 6)
+			.attr("y", y.rangeBand() / 2)
+			.attr("dy", ".64em")
+			.attr("text-anchor", "start")
+			.style("font-size", fontSize.toString() + "px")
+			.text(function(d, i) { return d[i][2]; });
+		
+		row.selectAll(".cell")
+			.attr("fill", function(d) { return helperFunctions.chooseColor(d, colorMap, sortColor); } );
+		
+		////////////////////////////////////////////
+		// Define the legend of the visualization //
+		////////////////////////////////////////////
+		
+		var legend = restGroup.selectAll(".legend")
+		  .data([0,colorMap[0],colorMap[1],colorMap[2],colorMap[3],colorMap[4]]);
+		
+		legend.enter().append("g")
+		  .attr("class", "legend");
+
+		legend.append("rect")
+			.attr("x", width + (gridSize / 2))
+			.attr("y", function(d, i) { return legendElementWidth * i; })
+			.attr("width", gridSize / 2)
+			.attr("height", legendElementWidth)
+			.style("stroke", "black")
+			.style("fill", function(d, i) { return colors[i]; });
+
+		legend.append("text")
+			.attr("class", "mono")
+			.text(function(d) { 
+				if (d >= 4)
+					return "≥ " + Math.round(d); 
+				else 
+					return Math.round(d);})
+			.attr("dy", ".75em")
+			.attr("x", width + (1.1*gridSize))
+			.style("fill", "Black")
+			.attr("y", function(d, i) { return (legendElementWidth* i); });
+
+		///////////////////////////////////////
+		// Update function for sorted matrix //
+		///////////////////////////////////////
+		
+		function loadSorted() {
+			
+			if (sorted == false) {
+				sorted = true;
+				sortedData = helperFunctions.sortMatrix(matrix);
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "clonesButton"); })
+					.style("fill", "#1d91c0");
+			} else {
+				sorted = false;
+				sortedData = matrix;
+				
+				buttonGroup.selectAll("rect")
+					.style("fill", "#EBFCFF");
+			}
+			gridGroup.selectAll("g").remove();
+			gridGroup.selectAll("rect").remove();
+			gridGroup.selectAll("text").remove();
+			
+			var row = gridGroup.selectAll(".row")
+				.data(sortedData)
+			  .enter().append("g")
+				.attr("class", "row")
+				.attr("transform", function(d, i) { return "translate(0," + y(i) + ")"; });
+			
+			row.selectAll(".cell")
+				.data(function(d) { return d; })
+			  .enter().append("rect")
+				.attr("class", "cell")
+				.attr("x", function(d, i) { return x(i); })
+				.attr("width", x.rangeBand())
+				.attr("height", y.rangeBand())
+				.style("stroke-width", 0.5)
+				.style("stroke", "black")
+				.style("cursor","pointer")
+				.on("click", function(d) {loadDetail(d);})
+				.on("mouseover", function(d,i,j) {	
+					row.selectAll(".cell")
+						.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+						.style("stroke-width", 2.5);
+					div.transition()		
+						.duration(200)		
+						.style("opacity", .9);		
+					div	.html("Row "+ j +": " + d[1] + "<br> Column " + i + ": " + d[2] + "<br> # clone pairs: " + d[0].toString())	
+						.style("left", (d3.event.pageX) + "px")		
+						.style("top", (d3.event.pageY - 70) + "px");	
+				})					
+				.on("mouseout", function(d,i,j) {
+					row.selectAll(".cell")
+						.filter(function(dx,ix,jx) { return (ix == i && jx == j); })
+						.style("stroke-width", 0.5);
+					div.transition()		
+						.duration(500)		
+						.style("opacity", 0);	
+				});
+				
+			row.append("text")
+				.attr("x", 0)
+				.attr("y", y.rangeBand() / 2)
+				.attr("dy", ".32em")
+				.attr("dx", "-.32em")
+				.attr("text-anchor", "end")
+				.style("font-size",fontSize.toString() + "px")
+				.text(function(d, i) { return d[i][1]; });
+				
+			var column = gridGroup.selectAll(".column")
+				.data(sortedData)
+			  .enter().append("g")
+				.attr("class", "column")
+				.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
+			
+			
+			column.append("text")
+				.attr("x", 6)
+				.attr("y", y.rangeBand() / 2)
+				.attr("dy", ".64em")
+				.attr("text-anchor", "start")
+				.style("font-size",fontSize.toString() + "px")
+				.text(function(d, i) { return d[i][2]; });
+			
+			row.selectAll(".cell")
+				.attr("fill", function(d) { return helperFunctions.chooseColor(d, colorMap, sortColor); } );
+		}
+		
+		/////////////////////////////////////////////////////////
+		// Update and remove functions for getting cell detail //
+		/////////////////////////////////////////////////////////
+		
+		function loadDetail(data) {
+			divDetail.style("opacity", 1)
+				.html(helperFunctions.createString(data, uniqueFiles.length))
+				.style("left", (d3.event.pageX + 50) + "px")		
+				.style("top", "200px")
+				.style("width", "380px")
+				.style("height", "400px")
+				.style("cursor", "pointer")
+				.on("click", function() {removeDetail();
+				});		
+		
+		}
+		
+		function removeDetail() {
+
+			divDetail.style("opacity", 0)
+				.attr("class", "detailview")
+				.style("width", "0px")
+				.style("height", "0px")
+				.style("left", "0px")
+				.style("top", "0px");
+		}
+		
+		////////////////////////////////////////////////////////
+		// Update colours and legend based on textfield input //
+		////////////////////////////////////////////////////////
+		
+		function loadColours(value) {
+			
+			if(value <= 20 && value > 15) {
+				colorMap = [1,2,3,4, value];
+				sortColor = false;
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "colourButton"); })
+					.style("fill", "#1d91c0");
+				
+			} else if (value > 20) {
+				colorMap = [1,(0.25*value),(0.5*value), (0.75*value), value];
+				sortColor = true;
+				
+				legend.selectAll("text").remove();
+			
+				restGroup.selectAll(".legend")
+				  .data([0,colorMap[0],colorMap[1],colorMap[2],colorMap[3],colorMap[4]]);
+				
+				legend.append("text")
+					.attr("class", "mono")
+					.text(function(d, i) { 
+						if (d == 0)
+							return Math.round(d); 
+						else 
+							return "≥ " + Math.round(d);})
+							
+					.attr("dy", ".75em")
+					.attr("x", width + (1.1*gridSize))
+					.style("fill", "Black")
+					.attr("y", function(d, i) { return (legendElementWidth* i); });
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "colourButton"); })
+					.style("fill", "#1d91c0");
+				
+			} else {
+				colorMap = [1,2,3,4,15];
+				sortColor = false;
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "colourButton"); })
+					.style("fill", "#EBFCFF");
+			}
+			
+			if (value <= 20) {
+				legend.selectAll("text").remove();
+				
+				restGroup.selectAll(".legend")
+				  .data([0,colorMap[0],colorMap[1],colorMap[2],colorMap[3],colorMap[4]]);
+				
+				legend.append("text")
+					.attr("class", "mono")
+					.text(function(d) { 
+						if (d >= 4)
+							return "≥ " + Math.round(d); 
+						else 
+							return Math.round(d);})
+					.attr("dy", ".75em")
+					.attr("x", width + (1.1*gridSize))
+					.style("fill", "Black")
+					.attr("y", function(d, i) { return (legendElementWidth* i); });
+			}	
+			
+			gridGroup.selectAll("rect")
+				.style("fill", function(d) { return helperFunctions.chooseColor(d, colorMap, sortColor); } );
+			
+		}
+		
+	});
+</script>

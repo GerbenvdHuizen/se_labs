@@ -1,3 +1,4 @@
+
 <!--
 	Software Evolution - University of Amsterdam
 	Practical Lab Series 2 - Clone Detection
@@ -7,7 +8,7 @@
 	Gerben van der Huizen - 10460748
 	December 2016
 	
-	Source for 'virtualscroller.js':
+	virtualscroller.js source:
 	http://bl.ocks.org/billdwhite/36d15bc6126e6f6365d0#virtualscroller.js
 -->
 
@@ -17,6 +18,8 @@
         <meta charset="utf-8">
         <title></title>
         <script type="text/javascript" src="js/D3/d3.v3.js"></script>
+		<script src="js/virtualscroller.js"></script>
+		<script src="js/helperFunctions.js"></script>
         <style>
 		body{
             font-family:"Arial";
@@ -65,151 +68,40 @@
             top: 15px;
             left: 15px;
             overflow-y: auto;
-            width: 1570px;
-            height: 775px;
+            width: 1200px;
+            height: 700px;
             background-color: #e8e8e8;
             border: 1px solid #AAAAAA;
             border-radius: 4px;
             box-shadow: inset 1px 1px 6px 2px rgba(0,0,0, .25);
         }
 		
+		.textfield {
+            position: absolute;
+            top: 650px;
+            left: 1330px;
+        }
 		</style>
     </head>
 <body>
 <div class="viewport"></div>
+<div class="textfield">
+<input type="number" id="legendInput" style="font-size:16pt;height:40px;width:50px;" maxlength="3">
+</div>
 <script>
 	
 	///////////////////
 	// Read CSV file //
 	///////////////////
-
-	d3.text("../csv/cloneDataFolders.csv", function(text) {
+	
+	d3.text("cloneDataFolders.csv", function(text) {
 		var parsedData = d3.csv.parseRows(text);
-		var clonesFilesData = [];
+		var clonesFoldersData = [];
 		var fileArray = [];
 		for (var i = 1; i < parsedData.length; i++) {
 			fileArray.push(parsedData[i][0]);
-			clonesFilesData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2])]);
+			clonesFoldersData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2])]);
 			
-		}
-		
-		///////////////////////
-		//	Helper functions //
-		///////////////////////
-		
-		// Get unique items from array.
-		function uniq(a) {
-			var seen = {};
-			return a.filter(function(item) {
-				return seen.hasOwnProperty(item) ? false : (seen[item] = true);
-			});
-		}
-		
-		// Fill a matrix with data.
-		function fillMatrix(first, second) {
-			var x = [0,"",""];
-			for (var i = 0; i < clonesFilesData.length; i++) {
-				if (clonesFilesData[i][0] == first && clonesFilesData[i][1] == second) {
-					x = [clonesFilesData[i][2], first, second];
-				}
-			}
-			return x;
-		}
-		// sort a today array by the column/index of an element.
-		function sortByColumn(a, colIndex){
-
-			a.sort(sortFunction);
-
-			function sortFunction(a, b) {
-				if (a[colIndex] === b[colIndex]) {
-					return 0;
-				}
-				else {
-					return (a[colIndex] > b[colIndex]) ? -1 : 1;
-				}
-			}
-
-			return a;
-		}
-		
-		// Sort matrix by columns and rows.
-		function sortMatrix(inputMatrix) {
-			sortedMatrix = [];
-			counter = 0
-			for (var i = 0; i < inputMatrix.length; i++) {
-				counter+=1;
-				sortedMatrix.push([]);
-				for (var j = 0; j < inputMatrix.length; j++) {
-					sortedMatrix[i].push([]);
-				}
-			}
-		
-			sortedMatrix2 = [];
-			for (var i = 0; i < inputMatrix.length; i++) {
-				sortedMatrix2.push([]);
-			}
-			
-			columnSums = [];
-			for (var i = 0; i < inputMatrix.length; i++) {
-				columnSum = 0;
-				for (var j = 0; j < inputMatrix.length; j++) {
-					columnSum += inputMatrix[j][i][0];
-				}
-				columnSums.push([columnSum,i]);
-			}
-			newColumn = sortByColumn(columnSums, 0);
-			for (var i = 0; i < inputMatrix.length; i++) {
-				for (var j = 0; j < inputMatrix.length; j++) {
-					sortedMatrix[i][j] = inputMatrix[i][newColumn[j][1]];
-				}
-			}
-			
-			rowSums = [];
-			
-			for (var i = 0; i < inputMatrix.length; i++) {
-				row = sortedMatrix[i];
-				rowSum = 0;
-				
-				for (var j = 0; j < inputMatrix.length; j++) {
-					rowSum += sortedMatrix[i][j][0];
-				}
-				rowSums.push([rowSum, i]);
-				
-			}
-			newRow = sortByColumn(rowSums, 0);
-			
-			for (var i = 0; i < inputMatrix.length; i++) {
-				sortedMatrix2[i] = sortedMatrix[newRow[i][1]];
-			}
-		
-			return sortedMatrix2;
-		}
-		
-		// Return a color code based on the integer input.
-		function chooseColor(d) {
-			color = "black";
-			if (d[0] == 0)
-				color = "white";
-			else if (d[0] == 1)
-				color = "#c7e9b4";
-			else if (d[0] == 2)
-				color = "#7fcdbb";
-			else if (d[0] == 3)
-				color = "#41b6c4";
-			else if (d[0] >= 4 && d[0] < 15)
-				color = "#1d91c0";
-			else if (d[0] >= 15)
-				color = "#225ea8";
-			
-			return color
-		}
-		
-		// Determine font size.
-		function fontSize(d) {
-			fontSize = 10;
-			if (d >= 80)
-				fontSize = 7;
-			return fontSize;
 		}
 		
 		///////////////////////////
@@ -218,31 +110,34 @@
 		
 		var sorted = false;
 		var detail = false;
+		var sortColor = false;
 		
-		var uniqueFiles = uniq(fileArray);
+		var uniqueFiles = helperFunctions.uniq(fileArray);
 		
 		var margin = {top: 175, right: 15, bottom: 0, left: 350},
-			width = 1400,
-			height = 1000
-			innerWidth = 1000
-			innerHeight = 700;
+			width = 1050,
+			height = 1000,
+			innerWidth = 800,
+			innerHeight = 500;
 			
 		var numrows = uniqueFiles.length;
 		var numcols = uniqueFiles.length;
 		var matrix = new Array(numrows);
-		var fontSize = fontSize(uniqueFiles.length);
+		var fontSize = helperFunctions.fontSize(uniqueFiles.length);
 		
 		for (var i = 0; i < numrows; i++) {
 			matrix[i] = new Array(numcols);
 			for (var j = 0; j < numcols; j++) {
-				matrix[i][j] = fillMatrix(uniqueFiles[i], uniqueFiles[j]);
+				matrix[i][j] = helperFunctions.fillMatrix(uniqueFiles[i], uniqueFiles[j], clonesFoldersData);
 			}
 		}
 		
+		var colorMap = [1,2,3,4,15];
 		var colors = ["white","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8"];
 		var gridSize = Math.floor(height / 24);
 		var legendElementWidth = gridSize*2;
 		var rowLabels = new Array(numrows);
+		var sortedData = matrix;
 		
 		var x = d3.scale.ordinal()
 			.domain(d3.range(numcols))
@@ -255,7 +150,7 @@
 		/////////////////////////////////////
 		// Define the visualization window //
 		/////////////////////////////////////
-
+		
 		var svg = d3.select(".viewport").append("svg")
             .attr("class", "scroll-svg")
 			.attr("width", innerWidth +  margin.left + margin.right)
@@ -270,7 +165,7 @@
 			.attr("height", innerHeight);
 			
 		var restGroup = d3.select("body").append("svg")
-			.attr("width", width + margin.left + 100)
+			.attr("width", width + margin.left + 500)
 			.attr("height", 800)
 			.style("margin-left", (-0.5* margin.left) + "px")
 		  .append("g")
@@ -282,25 +177,35 @@
 		///////////////////////////////////////////
 		
 		var buttonGroup = restGroup.append("g").attr("class", "buttonGroup");
+		
+		
+		var legendText = buttonGroup.append("text")
+			.attr("class", "legendtext")
+			.text("Colour by # clone pairs")
+			.attr("x", 1120)
+			.attr("y", 50)
+			.attr("dy", "" + .3 + "ex")
+			.style("fill", "Black")
+			.style("font-size",""+ 16 +"px");
 			
 		var sortText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("Sort by:")
-			.attr("x", width *1.02)
-			.attr("y", height * 0.51)
+			.attr("x", 1060)
+			.attr("y", 520)
 			.attr("dy", "" + .3 + "ex")
 			.style("fill", "Black")
-			.style("font-size",""+ width * 0.011 +"px");
+			.style("font-size",""+ 16 +"px");
 		
 		var clonesButton = buttonGroup.append("rect")
 			.data(["clonesButton"])
 			.attr("class", "button")
-			.attr("x", width * 1.014)
-			.attr("y", height * 0.528)
+			.attr("x", 1050)
+			.attr("y", 530)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", width * 0.052)
-			.attr("height", width * 0.022)
+			.attr("width", 75)
+			.attr("height", 40)
 			.style("fill", "#EBFCFF")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -311,24 +216,23 @@
 		var clonesButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("# Pairs")
-			.attr("x", width *1.022)
-			.attr("y", height * 0.546)
+			.attr("x", 1060)
+			.attr("y", 552)
 			.attr("dy", "" + .3 + "ex")
-			.style("font-size",""+ width * 0.011 +"px")
+			.style("font-size",""+ 16 +"px")
 			.style("cursor","pointer")
 			.style("fill", "Black")
 			.on("click", function() {loadSorted();
-			});
-			
-			
+			});			
+		
 		var folderButton = buttonGroup.append("rect")
 			.attr("class", "button")
-			.attr("x", width * 1.014)
-			.attr("y", height * 0.578)
+			.attr("x", 1050)
+			.attr("y", 580)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", width * 0.052)
-			.attr("height", width * 0.022)
+			.attr("width", 75)
+			.attr("height", 40)
 			.style("fill", "#1d91c0")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -338,13 +242,57 @@
 		var folderButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("Folder")
-			.attr("x", width *1.025)
-			.attr("y", height * 0.596)
+			.attr("x", 1065)
+			.attr("y", 602)
 			.attr("dy", "" + .3 + "ex")
-			.style("font-size",""+ width * 0.011 +"px")
+			.style("font-size",""+ 16 +"px")
 			.style("fill", "Black")
 			.on("click", function(d,i){location.href = "index.html";})
 			.style("cursor", "pointer");
+			
+		var colourButton = buttonGroup.append("rect")
+			.data(["colourButton"])
+			.attr("class", "button")
+			.attr("x", 1050)
+			.attr("y", 630)
+			.attr("rx", 5)
+			.attr("ry", 5)
+			.attr("width", 75)
+			.attr("height", 40)
+			.style("fill", "#EBFCFF")
+			.style("stroke", "black")
+			.style("opacity", 0.7)
+			.on("click", function(d,i){loadColours(document.getElementById("legendInput").value);})
+			.style("cursor", "pointer");
+			
+		var colourButtonText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("Colour")
+			.attr("x", 1065)
+			.attr("y", 652)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 16 +"px")
+			.style("fill", "Black")
+			.on("click", function(d,i){loadColours(document.getElementById("legendInput").value);})
+			.style("cursor", "pointer");
+			
+		var colourExtraText = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("(Maximum amount")
+			.attr("x", 1208)
+			.attr("y", 640)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 14 +"px")
+			.style("fill", "Black");
+			
+		var colourExtraText2 = buttonGroup.append("text")
+			.attr("class", "buttontext")
+			.text("of clone pairs >15)")
+			.attr("x", 1208)
+			.attr("y", 660)
+			.attr("dy", "" + .3 + "ex")
+			.style("font-size",""+ 14 +"px")
+			.style("fill", "Black");
 		
 		///////////////////////
 		// Define the pop-up //
@@ -384,7 +332,7 @@
 				div.transition()		
 					.duration(200)		
 					.style("opacity", .9);		
-				div	.html("Row "+ j +": " + d[1] + "; Column " + i + ": " + d[2] + "; # clones: " + d[0].toString())	
+				div	.html("Row "+ j +": " + d[1] + "<br> Column " + i + ": " + d[2] + "<br> # clone pairs: " + d[0].toString())	
 					.style("left", (d3.event.pageX) + "px")		
 					.style("top", (d3.event.pageY - 70) + "px");	
 			})					
@@ -421,14 +369,14 @@
 			.text(function(d, i) { return d[i][2]; });
 		
 		row.selectAll(".cell")
-			.attr("fill", function(d) { return chooseColor(d); } );
+			.attr("fill", function(d) { return helperFunctions.chooseColor(d, colorMap, sortColor); } );
 		
 		////////////////////////////////////////////
 		// Define the legend of the visualization //
 		////////////////////////////////////////////
 		
 		var legend = restGroup.selectAll(".legend")
-		  .data([0,1,2,3,4,15]);
+		  .data([0,colorMap[0],colorMap[1],colorMap[2],colorMap[3],colorMap[4]]);
 		
 		legend.enter().append("g")
 		  .attr("class", "legend");
@@ -463,7 +411,7 @@
 			
 			if (sorted == 0) {
 				sorted = 1;
-				sortedData = sortMatrix(matrix);
+				sortedData = helperFunctions.sortMatrix(matrix);
 				
 				buttonGroup.selectAll("rect")
 					.filter(function(d) { return (d == "clonesButton"); })
@@ -502,7 +450,7 @@
 					div.transition()		
 						.duration(200)		
 						.style("opacity", .9);		
-					div	.html("Row "+ j +": " + d[1] + "; Column " + i + ": " + d[2] + "; # clones: " + d[0].toString())	
+					div	.html("Row "+ j +": " + d[1] + "<br> Column " + i + ": " + d[2] + "<br> # clone pairs: " + d[0].toString())	
 						.style("left", (d3.event.pageX) + "px")		
 						.style("top", (d3.event.pageY - 70) + "px");	
 				})					
@@ -539,7 +487,80 @@
 				.text(function(d, i) { return d[i][2]; });
 			
 			row.selectAll(".cell")
-				.attr("fill", function(d) { return chooseColor(d); } );
+				.attr("fill", function(d) { return helperFunctions.chooseColor(d, colorMap, sortColor); } );
+		}
+		
+		////////////////////////////////////////////////////////
+		// Update colours and legend based on textfield input //
+		////////////////////////////////////////////////////////
+		
+		function loadColours(value) {
+			
+			if(value <= 20 && value > 15) {
+				colorMap = [1,2,3,4, value];
+				sortColor = false;
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "colourButton"); })
+					.style("fill", "#1d91c0");
+				
+			} else if (value > 20) {
+				colorMap = [1,(0.25*value),(0.5*value), (0.75*value), value];
+				sortColor = true;
+				
+				legend.selectAll("text").remove();
+			
+				restGroup.selectAll(".legend")
+				  .data([0,colorMap[0],colorMap[1],colorMap[2],colorMap[3],colorMap[4]]);
+				
+				legend.append("text")
+					.attr("class", "mono")
+					.text(function(d, i) { 
+						if (d == 0)
+							return Math.round(d); 
+						else 
+							return "≥ " + Math.round(d);})
+							
+					.attr("dy", ".75em")
+					.attr("x", width + (1.1*gridSize))
+					.style("fill", "Black")
+					.attr("y", function(d, i) { return (legendElementWidth* i); });
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "colourButton"); })
+					.style("fill", "#1d91c0");
+				
+			} else {
+				colorMap = [1,2,3,4,15];
+				sortColor = false;
+				
+				buttonGroup.selectAll("rect")
+					.filter(function(d) { return (d == "colourButton"); })
+					.style("fill", "#EBFCFF");
+			}
+			
+			if (value <= 20) {
+				legend.selectAll("text").remove();
+				
+				restGroup.selectAll(".legend")
+				  .data([0,colorMap[0],colorMap[1],colorMap[2],colorMap[3],colorMap[4]]);
+				
+				legend.append("text")
+					.attr("class", "mono")
+					.text(function(d) { 
+						if (d >= 4)
+							return "≥ " + Math.round(d); 
+						else 
+							return Math.round(d);})
+					.attr("dy", ".75em")
+					.attr("x", width + (1.1*gridSize))
+					.style("fill", "Black")
+					.attr("y", function(d, i) { return (legendElementWidth* i); });
+			}	
+			
+			gridGroup.selectAll("rect")
+				.style("fill", function(d) { return helperFunctions.chooseColor(d, colorMap, sortColor); } );
+			
 		}
 	});
 </script>
