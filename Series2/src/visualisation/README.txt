@@ -52,4 +52,7 @@ Note: these instructions are for Windows users.
    in your browser of choice.
 
  * To open local files make sure your Eclipse project is in c:/Users/*UserName*/workspace/..
+   Also since javascript cannot access your Windows username you will need to change
+   "LGGX" to your own Windows username line 150 ("file:///C:/Users/LGGX/workspace/"). Don't
+   change line 157, since that one accesses the data set!
 
