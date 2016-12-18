@@ -1,7 +1,7 @@
 Practical Lab Series 2 - Clone Detection
 ==========
 
-Series 2 focuses on clone detection. Using RASCAL, we have implemented a clone detection tool that can detect Type 2 clones in a Java project. Furthermore, we have implemented a clone management tool that visualises the results of the clone detection tool (i.e., an interactive web visualisation written using the Javascript D3 library). This README briefly describes how to run the tools. More information about the assignment and implementation details can de found in the PDF file in this repository (see `Series2/Report_Series2.pdf`).
+Series 2 focuses on clone detection. Using RASCAL, we have implemented a clone detection tool that can detect Type 2 clones in a Java project. Furthermore, we have implemented a clone management tool that visualises the results of the clone detection tool (i.e., an interactive web visualisation written using the Javascript D3 library). This README briefly describes how to run the tools. More information about the assignment and implementation details can be found in the PDF file in this repository (see `Series2/Report_Series2.pdf`).
 
 The clone detection tool
 ---------------------
