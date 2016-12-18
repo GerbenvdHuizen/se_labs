@@ -98,10 +98,11 @@
 		var parsedData = d3.csv.parseRows(text);
 		var clonesFoldersData = [];
 		var fileArray = [];
+		var dict = {};
 		for (var i = 1; i < parsedData.length; i++) {
 			fileArray.push(parsedData[i][0]);
 			clonesFoldersData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2])]);
-			
+			dict[parsedData[i][0] + parsedData[i][1]] = [parseInt(parsedData[i][2])];
 		}
 		
 		///////////////////////////
@@ -128,7 +129,8 @@
 		for (var i = 0; i < numrows; i++) {
 			matrix[i] = new Array(numcols);
 			for (var j = 0; j < numcols; j++) {
-				matrix[i][j] = helperFunctions.fillMatrix(uniqueFiles[i], uniqueFiles[j], clonesFoldersData);
+				valueList = dict[(uniqueFiles[i] + uniqueFiles[j])];
+				matrix[i][j] = [valueList[0],uniqueFiles[i], uniqueFiles[j]];
 			}
 		}
 		
@@ -200,12 +202,12 @@
 		var clonesButton = buttonGroup.append("rect")
 			.data(["clonesButton"])
 			.attr("class", "button")
-			.attr("x", 1050)
-			.attr("y", 530)
+			.attr("x", 1110)
+			.attr("y", 540)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", 75)
-			.attr("height", 40)
+			.attr("width", 20)
+			.attr("height", 20)
 			.style("fill", "#EBFCFF")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -216,23 +218,23 @@
 		var clonesButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("# Pairs")
-			.attr("x", 1060)
+			.attr("x", 1050)
 			.attr("y", 552)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ 16 +"px")
 			.style("cursor","pointer")
 			.style("fill", "Black")
 			.on("click", function() {loadSorted();
-			});			
+			});
 		
 		var folderButton = buttonGroup.append("rect")
 			.attr("class", "button")
-			.attr("x", 1050)
-			.attr("y", 580)
+			.attr("x", 1110)
+			.attr("y", 590)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", 75)
-			.attr("height", 40)
+			.attr("width", 20)
+			.attr("height", 20)
 			.style("fill", "#1d91c0")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -242,7 +244,7 @@
 		var folderButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("Folder")
-			.attr("x", 1065)
+			.attr("x", 1055)
 			.attr("y", 602)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ 16 +"px")
@@ -253,12 +255,12 @@
 		var colourButton = buttonGroup.append("rect")
 			.data(["colourButton"])
 			.attr("class", "button")
-			.attr("x", 1050)
-			.attr("y", 630)
+			.attr("x", 1110)
+			.attr("y", 640)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", 75)
-			.attr("height", 40)
+			.attr("width", 20)
+			.attr("height", 20)
 			.style("fill", "#EBFCFF")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -268,7 +270,7 @@
 		var colourButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("Colour")
-			.attr("x", 1065)
+			.attr("x", 1055)
 			.attr("y", 652)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ 16 +"px")
@@ -473,7 +475,7 @@
 				.text(function(d, i) { return d[i][1]; });
 				
 			var column = gridGroup.selectAll(".column")
-				.data(matrix)
+				.data(sortedData)
 			  .enter().append("g")
 				.attr("class", "column")
 				.attr("transform", function(d, i) { return "translate(" + x(i) + ")rotate(-90)"; });
@@ -481,7 +483,7 @@
 			column.append("text")
 				.attr("x", 6)
 				.attr("y", y.rangeBand() / 2)
-				.attr("dy", "3em")
+				.attr("dy", "0.5em")
 				.attr("text-anchor", "start")
 				.style("font-size","24px")
 				.text(function(d, i) { return d[i][2]; });

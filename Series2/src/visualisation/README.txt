@@ -38,9 +38,7 @@ Some important links:
 INSTALLATION
 ------------
  
-Note: these instructions are for Windows users.
-
- * Download Xampp from the provide link and install its components in c:\xampp.
+ * Download Xampp from the provide link and install its components.
 
  * Take the the entire src/visualisation folder provided in the submission and copy it
    to the xampp/htdocs directory. All the data sets from src/csv also need to be added
@@ -50,9 +48,4 @@ Note: these instructions are for Windows users.
 
  * Now from your browser, call localhost/"name of the folder in htdocs" to run the visualisation
    in your browser of choice.
-
- * To open local files make sure your Eclipse project is in c:/Users/*UserName*/workspace/..
-   Also since javascript cannot access your Windows username you will need to change
-   "LGGX" to your own Windows username line 150 ("file:///C:/Users/LGGX/workspace/"). Don't
-   change line 157, since that one accesses the data set!
 

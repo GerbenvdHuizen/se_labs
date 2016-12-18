@@ -115,9 +115,11 @@
 		var parsedData = d3.csv.parseRows(text);
 		var clonesFilesData = [];
 		var fileArray = [];
+		var dict = {};
 		for (var i = 1; i < parsedData.length; i++) {
 			fileArray.push(parsedData[i][0]);
 			clonesFilesData.push([parsedData[i][0], parsedData[i][1], parseInt(parsedData[i][2]),parsedData[i][3].toString()]);
+			dict[parsedData[i][0] + parsedData[i][1]] = [parseInt(parsedData[i][2]),parsedData[i][3].toString()];
 		}
 		
 		///////////////////////////
@@ -133,8 +135,8 @@
 		var margin = {top: 175, right: 15, bottom: 0, left: 350},
 			width = 1050,
 			height = 1000,
-			innerWidth = 4000,
-			innerHeight = 3000;
+			innerWidth = 8000,
+			innerHeight = 6000;
 			
 		var numrows = uniqueFiles.length;
 		var numcols = uniqueFiles.length;
@@ -144,7 +146,8 @@
 		for (var i = 0; i < numrows; i++) {
 			matrix[i] = new Array(numcols);
 			for (var j = 0; j < numcols; j++) {
-				matrix[i][j] = helperFunctions.fillMatrix(uniqueFiles[i], uniqueFiles[j], clonesFilesData);
+				valueList = dict[(uniqueFiles[i] + uniqueFiles[j])];
+				matrix[i][j] = [valueList[0],uniqueFiles[i], uniqueFiles[j], valueList[1]];
 			}
 		}
 		
@@ -215,12 +218,12 @@
 		var clonesButton = buttonGroup.append("rect")
 			.data(["clonesButton"])
 			.attr("class", "button")
-			.attr("x", 1050)
-			.attr("y", 530)
+			.attr("x", 1110)
+			.attr("y", 540)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", 75)
-			.attr("height", 40)
+			.attr("width", 20)
+			.attr("height", 20)
 			.style("fill", "#EBFCFF")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -231,7 +234,7 @@
 		var clonesButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("# Pairs")
-			.attr("x", 1060)
+			.attr("x", 1050)
 			.attr("y", 552)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ 16 +"px")
@@ -239,16 +242,15 @@
 			.style("fill", "Black")
 			.on("click", function() {loadSorted();
 			});
-			
 		
 		var folderButton = buttonGroup.append("rect")
 			.attr("class", "button")
-			.attr("x", 1050)
-			.attr("y", 580)
+			.attr("x", 1110)
+			.attr("y", 590)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", 75)
-			.attr("height", 40)
+			.attr("width", 20)
+			.attr("height", 20)
 			.style("fill", "#EBFCFF")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -258,7 +260,7 @@
 		var folderButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("Folder")
-			.attr("x", 1065)
+			.attr("x", 1055)
 			.attr("y", 602)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ 16 +"px")
@@ -269,12 +271,12 @@
 		var colourButton = buttonGroup.append("rect")
 			.data(["colourButton"])
 			.attr("class", "button")
-			.attr("x", 1050)
-			.attr("y", 630)
+			.attr("x", 1110)
+			.attr("y", 640)
 			.attr("rx", 5)
 			.attr("ry", 5)
-			.attr("width", 75)
-			.attr("height", 40)
+			.attr("width", 20)
+			.attr("height", 20)
 			.style("fill", "#EBFCFF")
 			.style("stroke", "black")
 			.style("opacity", 0.7)
@@ -284,7 +286,7 @@
 		var colourButtonText = buttonGroup.append("text")
 			.attr("class", "buttontext")
 			.text("Colour")
-			.attr("x", 1065)
+			.attr("x", 1055)
 			.attr("y", 652)
 			.attr("dy", "" + .3 + "ex")
 			.style("font-size",""+ 16 +"px")
@@ -402,7 +404,7 @@
 			.attr("dy", ".32em")
 			.attr("dx", "-.64em")
 			.attr("text-anchor", "end")
-			.style("font-size", fontSize.toString() + "px")
+			.style("font-size",  "9px")
 			.text(function(d, i) { return d[i][1]; });
 			
 		var column = gridGroup.selectAll(".column")
@@ -416,7 +418,7 @@
 			.attr("y", y.rangeBand() / 2)
 			.attr("dy", ".64em")
 			.attr("text-anchor", "start")
-			.style("font-size", fontSize.toString() + "px")
+			.style("font-size", "9px")
 			.text(function(d, i) { return d[i][2]; });
 		
 		row.selectAll(".cell")
@@ -519,7 +521,7 @@
 				.attr("dy", ".32em")
 				.attr("dx", "-.32em")
 				.attr("text-anchor", "end")
-				.style("font-size",fontSize.toString() + "px")
+				.style("font-size", "9px")
 				.text(function(d, i) { return d[i][1]; });
 				
 			var column = gridGroup.selectAll(".column")
@@ -534,7 +536,7 @@
 				.attr("y", y.rangeBand() / 2)
 				.attr("dy", ".64em")
 				.attr("text-anchor", "start")
-				.style("font-size",fontSize.toString() + "px")
+				.style("font-size", "9px")
 				.text(function(d, i) { return d[i][2]; });
 			
 			row.selectAll(".cell")

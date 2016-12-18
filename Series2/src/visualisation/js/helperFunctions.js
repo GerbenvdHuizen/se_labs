@@ -18,7 +18,7 @@ var helperFunctions = (function() {
 	_helpers.fontSize = function(d) {
 		fontSize = 10;
 		if (d >= 80)
-			fontSize = 7;
+			fontSize = 10;
 		return fontSize;
 	}
 
@@ -63,17 +63,6 @@ var helperFunctions = (function() {
 		return a.filter(function(item) {
 			return seen.hasOwnProperty(item) ? false : (seen[item] = true);
 		});
-	}
-
-	// Fill a matrix with data.
-	_helpers.fillMatrix = function(first, second, matrix) {
-		var x = [0,"",""];
-		for (var i = 0; i < matrix.length; i++) {
-			if (matrix[i][0] == first && matrix[i][1] == second) {
-				x = [matrix[i][2], first, second, matrix[i][3]];
-			}
-		}
-		return x;
 	}
 	
 	// sort a today array by the column/index of an element.
