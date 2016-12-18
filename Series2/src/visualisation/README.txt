@@ -38,7 +38,9 @@ Some important links:
 INSTALLATION
 ------------
  
- * Download Xampp from the provide link and install its components.
+Note: these instructions are for Windows users.
+
+ * Download Xampp from the provide link and install its components in c:\xampp.
 
  * Take the the entire src/visualisation folder provided in the submission and copy it
    to the xampp/htdocs directory. All the data sets from src/csv also need to be added
@@ -48,4 +50,6 @@ INSTALLATION
 
  * Now from your browser, call localhost/"name of the folder in htdocs" to run the visualisation
    in your browser of choice.
+
+ * To open local files make sure your Eclipse project is in c:/Users/*UserName*/workspace/..
 
